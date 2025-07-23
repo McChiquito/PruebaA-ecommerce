@@ -1,0 +1,244 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VICVAR COMPUTER - Computadoras y Componentes</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> 
+</head>
+<body>
+<!--<div class="cart-icon-container-floating">
+    <button id="cart-button" class="btn-cart">
+      <i class="fas fa-shopping-cart"></i> <span id="cart-count" class="cart-count">0</span>
+    </button>
+</div>
+<div id="cart-modal" class="modal">
+    <div class="modal-content cart-modal-content">
+        <span class="close-button" id="cerrar-cart-modal">&times;</span>
+        <h2>Tu Carrito de Compras</h2>
+        <div id="cart-items-container" class="cart-items-container">
+            <p id="empty-cart-message">El carrito está vacío.</p>
+        </div>
+        <div class="cart-summary">
+            <p>Total de Artículos: <span id="cart-total-items">0</span></p>
+            <p>Total a Pagar: <span id="cart-total-price">$0.00</span></p>
+        </div>
+        <div class="cart-actions">
+            <button id="checkout-button" class="btn btn-primary">Proceder al Pago</button>
+            <button id="clear-cart-button" class="btn btn-secondary">Vaciar Carrito</button>
+        </div>
+    </div>
+</div> -->
+
+<header class="main-header">
+    <div class="header-content">
+        <div class="header-branding">
+            <div class="logo">
+                <img src="{% static 'img/logo_vicvar_computer.png' %}" alt="Logo VICVAR COMPUTER">
+            </div>
+            <div class="header-tittle">VICVAR COMPUTER</div>
+        </div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="#Inicio">Inicio</a></li>
+                <li><a href="#catalogo">Catálogo</a></li>
+                <li><a href="#contacto">Contacto</a></li>
+            </ul>
+        </nav>
+
+        {# --- AÑADIMOS ESTO PARA LOS ENLACES DE AUTENTICACIÓN --- #}
+<div class="auth-controls">
+    {% if user.is_authenticated %}
+        <span>Hola, {{ user.username }}!</span>
+        {% if user.is_staff %}
+            <a href="{% url 'productos:admin_dashboard' %}" class="btn-header-auth">Panel Admin</a>
+        {% endif %}
+        
+        {# --- REEMPLAZA TU ENLACE DE CERRAR SESIÓN CON ESTO --- #}
+        <form action="{% url 'logout' %}" method="post" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn-header-auth">Cerrar Sesión</button>
+        </form>
+        {# ---------------------------------------------------- #}
+
+    {% else %}
+        <a href="{% url 'login' %}" class="btn-header-auth">Iniciar Sesión</a>
+    {% endif %}
+</div>
+        {# --- FIN DE LOS ENLACES DE AUTENTICACIÓN --- #}
+
+    </div>
+</header>
+
+
+<section id="Inicio" class="hero-section">
+    <div class="container hero-content">
+        <div class="hero-text">
+            <h1>Servicios profesionales</h1>
+            <h2>Armados de Computadoras <br> Reparación y Ventas de Componentes</h2>
+            <p>Somos el número uno en armado de computadoras, venta de componentes y reparación en todo México</p>
+            <div class="hero-buttons">
+                <a href="#servicios" class="btn btn-primary">SERVICIOS</a>
+                <a href="#contacto" class="btn btn-secondary">CONTACTO</a>
+            </div>
+        </div>
+        <div class="hero-image">
+            <img src="{% static 'img/imagen_componentes_hero.png' %}" alt="Componentes de PC y Computadora Armada">
+        </div>
+    </div>
+</section>
+
+<section id="computadoras-armadas" class="section-computadoras-armadas">
+    <div class="container">
+        <h2>COMPUTADORAS ARMADAS</h2>
+        <p class="subtitle">Explora nuestras configuraciones pre-ensambladas</p>
+
+        <div class="carousel-navigation">
+            <button id="computadoras-prev-btn" class="carousel-button">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="computadoras-armadas-grid" id="computadoras-armadas-grid">
+                </div>
+            <button id="computadoras-next-btn" class="carousel-button">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+        <div class="ver-mas-container">
+            <a href="#catalogo" class="btn btn-primary">VER TODAS LAS COMPUTADORAS ARMADAS</a>
+        </div>
+    </div>
+</section>
+
+<section class="mid-banner">
+    <div class="container">
+        <h3>Armados de computadoras profesionales para <br> Gaming, diseño, oficina y muchos más.</h3>
+    </div>
+</section>
+
+<section id="servicios" class="section-services">
+    <div class="container">
+        <h2>Nuestros Servicios</h2>
+        <p class="subtitle">Estos son los servicios que manejamos en VICVAR COMPUTER</p>
+        <div class="services-grid">
+            <div class="service-card">
+                <img src="{% static 'img/servicio_componentes.jpg' %}" alt="Venta de Componentes">
+                <h3>Venta de Componentes</h3>
+                <a href="#catalogo" class="btn btn-tertiary">Catálogo</a>
+            </div>
+            <div class="service-card">
+                <img src="{% static 'img/servicio_armador.png' %}" alt="Armador de Computadoras">
+                <h3>Armador de Computadoras</h3>
+                <a href="#" class="btn btn-tertiary">Contacto</a>
+            </div>
+            <div class="service-card">
+                <img src="{% static 'img/servicio_reparacion.jpg' %}" alt="Reparación de Computadoras">
+                <h3>Reparación de Computadoras</h3>
+                <a href="#" class="btn btn-tertiary">Contacto</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<section id="catalogo" class="section-catalogo">
+    <div class="container catalogo-layout">
+        <aside class="filtros">
+            <h3>Buscar producto</h3>
+            <input type="text" id="busqueda-producto" placeholder="Buscar producto..." />
+            <h3>Filtrar por categoría</h3>
+            <div class="filtro-existencia" style="margin-bottom: 10px;">
+                <label>
+                    <input type="checkbox" id="filtro-existencia">
+                    Solo en existencia
+                </label>
+            </div>
+            <div id="filtros-categorias" class="filtros-categorias">
+                </div>
+        </aside>
+
+        <main class="catalogo">
+            <div id="catalogo-grid" class="catalogo-grid">
+                </div>
+
+            <div class="pagination-container">
+                <button id="prev-page" class="pagination-button" disabled>Anterior</button>
+                <div id="page-numbers" class="page-numbers">
+                    </div>
+                <button id="next-page" class="pagination-button">Siguiente</button>
+            </div>
+            <span id="total-productos"></span>
+        </main>
+    </div>
+</section>
+<section id="contacto" class="cta-location">
+    <div class="container">
+        <h3>¿Necesitas asesoría o una cotización personalizada?</h3>
+        <div class="cta-buttons">
+            <a href="mailto:tu_correo@example.com" class="btn btn-primary">Envíanos un Email</a>
+            <a href="tel:+525512345678" class="btn btn-secondary">Llámanos</a>
+        </div>
+    </div>
+</section>
+<div id="producto-modal" class="modal">
+        <span class="close-button" id="close-producto-modal">&times;</span>
+        <div class="modal-body">
+            <div class="modal-image-gallery">
+                <img id="modal-imagen" src="" alt="Producto">
+            </div>
+            <div class="modal-details">
+                <h2 id="modal-nombre"></h2>
+                <p id="modal-descripcion-prod"></p>
+                <p id="modal-descripcion2-prod"></p>
+                <p id="modal-precio"></p>
+                <div class="modal-quantity-control">
+                    <label for="modal-cantidad">CANTIDAD:</label>
+                    <input type="number" id="modal-cantidad" value="1" min="1">
+                </div>
+                <button class="btn btn-secondary" id="agregar-modal-carrito">Agregar al carrito</button>
+                <p id="modal-existencia" class="texto-existencia"></p>
+                <p id="modal-garantia"></p>
+                <div id="modal-caracteristicas-adicionales">
+                    <h4>Características Detalladas:</h4>
+                    <ul id="lista-caracteristicas-adicionales">
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <div class="footer-content">
+        <p>&copy; 2025 VICVAR COMPUTER. Todos los derechos reservados.</p>
+        <p><a href="{% url 'productos:admin_dashboard' %}">Acceso a Administración</a></p>
+    </div>
+</footer>
+
+<!--<div class="chat-wrapper">
+    <div class="chat-header">
+        <span class="chat-title">Atención al Cliente</span>
+        <button class="toggle-chat">-</button>
+    </div>
+    <div id="chat-body" class="chat-body">
+        <div id="chat-messages" class="chat-messages">
+            <div class="bot-message"><span class="message-content">Hola, ¿en qué podemos ayudarte? Por favor, déjanos tu nombre y tu consulta.</span></div>
+        </div>
+        <div id="chat-input-area" class="chat-input-area">
+            <input type="text" id="user-name-input" placeholder="Tu Nombre" required class="initial-input">
+            <textarea id="initial-query-input" placeholder="Tu Duda/Pregunta inicial" required class="initial-input"></textarea>
+
+            <textarea id="chat-input" placeholder="Escribe un mensaje..." required style="display: none;"></textarea>
+            <button type="submit" id="send-chat-button">Enviar</button>
+        </div>
+    </div>
+</div> -->
+<script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+<script src="{% static 'js/catalogo.js' %}"></script>
+
+
+<script src="https://unpkg.com/read-excel-file@5.0.0/bundle/read-excel-file.min.js"></script>
+<script src="{% static 'js/catalogo.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,386 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración de Chat - VICVAR COMPUTER</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            min-height: 100vh;
+        }
+        .admin-chat-container {
+            display: flex;
+            width: 100%;
+            max-width: 1200px;
+            margin: 20px auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .conversations-list {
+            width: 300px;
+            border-right: 1px solid #eee;
+            background-color: #f8f8f8;
+            padding: 15px;
+            overflow-y: auto;
+            max-height: 80vh;
+        }
+        .conversations-list h2 {
+            font-size: 1.2em;
+            color: #333;
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .conversation-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+            color: #555;
+        }
+        .conversation-item:last-child {
+            border-bottom: none;
+        }
+        .conversation-item:hover {
+            background-color: #e9e9e9;
+        }
+        .conversation-item.active {
+            background-color: #e0f7fa;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .conversation-status {
+            font-size: 0.8em;
+            padding: 3px 6px;
+            border-radius: 4px;
+            color: white;
+        }
+        .status-open {
+            background-color: #28a745; /* Verde */
+        }
+        .status-closed {
+            background-color: #dc3545; /* Rojo */
+        }
+        .chat-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+        }
+        .chat-header-current {
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            border: 1px solid #eee;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #fdfdfd;
+            margin-bottom: 15px;
+        }
+        .message-content {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .timestamp {
+            font-size: 0.75em;
+            color: #888;
+            text-align: right;
+            display: block;
+        }
+        .user-message {
+            background-color: #e0f7fa;
+            padding: 8px 12px;
+            border-radius: 15px 15px 0 15px;
+            margin-bottom: 10px;
+            max-width: 80%;
+            align-self: flex-end;
+            margin-left: auto;
+            word-wrap: break-word;
+            text-align: right;
+        }
+        .admin-message { /* Mensajes enviados por el administrador */
+            background-color: #d1ecf1; /* Un color ligeramente diferente para admin */
+            padding: 8px 12px;
+            border-radius: 15px 15px 15px 0;
+            margin-bottom: 10px;
+            max-width: 80%;
+            align-self: flex-start;
+            margin-right: auto;
+            word-wrap: break-word;
+            text-align: left;
+        }
+        .message-input-area {
+            display: flex;
+            gap: 10px;
+        }
+        .message-input-area textarea {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical;
+            min-height: 40px;
+        }
+        .message-input-area button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        .message-input-area button:hover {
+            background-color: #0056b3;
+        }
+        .no-conversation-selected {
+            text-align: center;
+            color: #777;
+            margin-top: 50px;
+        }
+        .close-conversation-btn {
+            background-color: #ffc107;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .close-conversation-btn:hover {
+            background-color: #e0a800;
+        }
+        .logout-link {
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 0.9em;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .logout-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <a href="{% url 'admin:logout' %}" class="logout-link">Cerrar Sesión (Admin)</a>
+    <div class="admin-chat-container">
+        <div class="conversations-list">
+            <h2>Conversaciones</h2>
+            {% for convo in conversations %}
+                <a href="{% url 'productos:admin_chat_panel_detail' convo.id %}" 
+                   class="conversation-item {% if convo.id == current_conversation.id %}active{% endif %}">
+                    <div>
+                        {% if convo.user %}
+                            Usuario: {{ convo.user.username }}
+                        {% elif convo.session_key %}
+                            Anónimo: {{ convo.session_key|slice:":8" }}...
+                        {% else %}
+                            Conversación #{{ convo.id }}
+                        {% endif %}
+                        <br>
+                        <small>Últ. act.: {{ convo.updated_at|date:"d M H:i" }}</small>
+                    </div>
+                    <span class="conversation-status {% if convo.is_closed %}status-closed{% else %}status-open{% endif %}">
+                        {% if convo.is_closed %}Cerrada{% else %}Abierta{% endif %}
+                    </span>
+                </a>
+            {% empty %}
+                <p>No hay conversaciones activas.</p>
+            {% endfor %}
+        </div>
+
+        <div class="chat-area">
+            {% if current_conversation %}
+                <div class="chat-header-current">
+                    <h3>Conversación con: 
+                        {% if current_conversation.user %}
+                            {{ current_conversation.user.username }}
+                        {% elif current_conversation.session_key %}
+                            Anónimo (ID: {{ current_conversation.session_key|slice:":8" }}...)
+                        {% else %}
+                            #{{ current_conversation.id }}
+                        {% endif %}
+                    </h3>
+                    {% if not current_conversation.is_closed %}
+                        <button id="close-conversation-btn" class="close-conversation-btn" data-id="{{ current_conversation.id }}">Cerrar Conversación</button>
+                    {% else %}
+                        <span class="conversation-status status-closed">Cerrada</span>
+                    {% endif %}
+                </div>
+                <div id="chat-messages" class="chat-messages">
+                    {% for message in chat_messages %}
+                        <div class="{% if message.sender_is_admin %}admin-message{% else %}user-message{% endif %}">
+                            <span class="message-content">{{ message.message }}</span>
+                            <span class="timestamp">{{ message.timestamp|date:"H:i" }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+                <div class="message-input-area">
+                    <textarea id="chat-message-input" placeholder="Escribe un mensaje..." {% if current_conversation.is_closed %}disabled{% endif %}></textarea>
+                    <button id="send-message-btn" {% if current_conversation.is_closed %}disabled{% endif %}>Enviar</button>
+                </div>
+            {% else %}
+                <div class="no-conversation-selected">
+                    <p>Selecciona una conversación de la lista para ver los mensajes.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const conversationId = {{ current_conversation.id|default:"null" }};
+            const chatMessagesContainer = document.getElementById('chat-messages');
+            const chatMessageInput = document.getElementById('chat-message-input');
+            const sendMessageBtn = document.getElementById('send-message-btn');
+            const closeConversationBtn = document.getElementById('close-conversation-btn');
+
+            let chatSocket = null;
+
+            function addMessageToChat(message, is_admin, timestamp) {
+                const messageElement = document.createElement('div');
+                messageElement.classList.add(is_admin ? 'admin-message' : 'user-message');
+                const formattedTimestamp = new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                messageElement.innerHTML = `<span class="message-content">${message}</span><span class="timestamp">${formattedTimestamp}</span>`;
+                chatMessagesContainer.appendChild(messageElement);
+                chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+            }
+
+            // WebSocket connection for the current conversation
+            if (conversationId) {
+                const ws_url = 'ws://' + window.location.host + '/ws/chat/' + conversationId + '/';
+                chatSocket = new WebSocket(ws_url);
+
+                chatSocket.onopen = function(e) {
+                    console.log('Admin WebSocket connection opened for conversation:', conversationId);
+                    if (sendMessageBtn) sendMessageBtn.disabled = false;
+                    if (chatMessageInput) chatMessageInput.disabled = false;
+                };
+
+                chatSocket.onmessage = function(e) {
+                    const data = JSON.parse(e.data);
+                    const message = data.message;
+                    const is_admin = data.is_admin;
+                    const timestamp = data.timestamp;
+                    addMessageToChat(message, is_admin, timestamp);
+                };
+
+                chatSocket.onclose = function(e) {
+                    console.warn('Admin WebSocket closed unexpectedly (code:', e.code, 'reason:', e.reason, ').');
+                    if (sendMessageBtn) sendMessageBtn.disabled = true;
+                    if (chatMessageInput) chatMessageInput.disabled = true;
+                    // Optional: Reconnect logic for admin panel
+                };
+
+                chatSocket.onerror = function(e) {
+                    console.error('Admin WebSocket error:', e);
+                };
+
+                // Send message when button is clicked
+                if (sendMessageBtn) {
+                    sendMessageBtn.addEventListener('click', function() {
+                        const message = chatMessageInput.value.trim();
+                        if (message === '' || !chatSocket || chatSocket.readyState !== WebSocket.OPEN) {
+                            return;
+                        }
+                        chatSocket.send(JSON.stringify({
+                            'message': message,
+                            'sender_is_admin': true, // Important: Mark as admin message
+                        }));
+                        chatMessageInput.value = '';
+                    });
+                }
+
+                // Send message when Enter is pressed in the input field
+                if (chatMessageInput) {
+                    chatMessageInput.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter' && !e.shiftKey) { // Allow Shift+Enter for new line
+                            e.preventDefault(); // Prevent default new line
+                            sendMessageBtn.click(); // Trigger button click
+                        }
+                    });
+                }
+
+                // Close conversation button functionality
+                if (closeConversationBtn) {
+                    closeConversationBtn.addEventListener('click', async function() {
+                        const convoIdToClose = this.dataset.id;
+                        if (!convoIdToClose) return;
+
+                        // Confirmación opcional
+                        if (!confirm('¿Estás seguro de que quieres cerrar esta conversación?')) {
+                            return;
+                        }
+
+                        try {
+                            const response = await fetch(`/api/conversations/${convoIdToClose}/close/`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': getCookie('csrftoken') // Necesitarás la función getCookie
+                                },
+                            });
+
+                            if (response.ok) {
+                                alert('Conversación cerrada exitosamente.');
+                                // Recargar la página o actualizar la UI
+                                window.location.reload(); 
+                            } else {
+                                const errorData = await response.json();
+                                alert('Error al cerrar la conversación: ' + (errorData.error || 'Desconocido'));
+                            }
+                        } catch (error) {
+                            console.error('Error cerrando conversación:', error);
+                            alert('Error de red o servidor al cerrar la conversación.');
+                        }
+                    });
+                }
+
+                // Helper para obtener CSRF token (copia esta función de tu index.html si no la tienes)
+                function getCookie(name) {
+                    let cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        const cookies = document.cookie.split(';');
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i].trim();
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+
+            } else {
+                console.log('No conversation selected for chat area.');
+            }
+        });
+    </script>
+
+           <a href="{% url 'productos:admin_dashboard' %}" class="btn-back-to-admin">Regresar al Panel de Administración</a>
+ 
+</body>
+</html>

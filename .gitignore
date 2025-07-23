@@ -1,0 +1,21 @@
+# Archivos del sistema operativo y editores
+.DS_Store
+.env               # ¡MUY IMPORTANTE! NO SUBIR VARIABLES DE ENTORNO
+*.pyc
+*.sqlite3          # ¡MUY IMPORTANTE! NO SUBIR LA BASE DE DATOS DE DESARROLLO
+.vscode/           # Si usas VS Code, ignora su configuración interna
+
+# Directorios de Python y entorno virtual
+__pycache__/       # Archivos compilados de Python
+venv/              # Tu entorno virtual (normalmente llamado 'venv' o 'env')
+env/               # Posiblemente otro nombre para el entorno virtual
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Archivos generados por Django que no van en Git, sino en S3
+media/             # Archivos subidos por usuarios (imágenes, documentos)
+staticfiles/       # Archivos estáticos recolectados por `collectstatic`
+
+# Logs y otros
+*.log

@@ -1,0 +1,63 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - VICVAR COMPUTER</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <header class="main-header">
+        <div class="header-content">
+            <div class="logo">
+                <img src="{% static 'img/logo_vicvar_computer.png' %}" alt="Logo VICVAR COMPUTER">
+            </div>
+            <div class="header-tittle">VICVAR COMPUTER</div>
+        </div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="{% url 'productos:index' %}">Inicio</a></li>
+                <li><a href="{% url 'productos:admin_dashboard' %}">Dashboard</a></li>
+                <li><a href="{% url 'productos:upload_excel_page' %}">Subir Catálogo</a></li>
+                <li><a href="{% url 'productos:admin_chat_panel' %}">Chat Admin</a></li>
+            </ul>
+        </nav>
+        <div class="auth-controls">
+            {% if user.is_authenticated %}
+                <span>Hola, {{ user.username }}!</span>
+                <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-header-auth">Cerrar Sesión</button>
+                </form>
+            {% endif %}
+        </div>
+    </header>
+
+    <main style="padding: 20px;">
+        <h1>Panel de Administración</h1>
+
+        <a href="{% url 'productos:index' %}" class="btn-back-to-home">Regresar a la Página Principal</a>
+
+        <section class="admin-dashboard-section">
+            <h2>Gestión de Productos</h2>
+            <p>Aquí puedes gestionar tus productos, ver estadísticas, etc.</p>
+            <a href="{% url 'productos:upload_excel_page' %}" class="btn-action">Subir/Actualizar Catálogo (Excel)</a>
+            
+            {# AÑADE ESTE NUEVO ENLACE AQUÍ #}
+            <a href="/admin/productos/producto/add/" class="btn-action" style="background-color: var(--color-tertiary);">Añadir Nuevo Producto (Manual)</a>
+            {# Opcional: También puedes añadir un enlace a la lista completa de productos en el admin #}
+            <a href="/admin/productos/producto/" class="btn-action">Ver/Editar Productos Existentes</a>
+
+        </section>
+
+        <section class="admin-dashboard-section">
+            <h2>Soporte de Chat</h2>
+            <p>Accede al panel de chat para responder a los usuarios.</p>
+            <a href="{% url 'productos:admin_chat_panel' %}" class="btn-action">Ir al Chat Admin</a>
+        </section>
+
+    </main>
+
+</body>
+</html>
