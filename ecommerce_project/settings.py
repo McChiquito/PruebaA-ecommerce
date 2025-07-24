@@ -108,9 +108,10 @@ ASGI_APPLICATION = 'ecommerce_project.asgi.application' # <--- ¡ASEGÚRATE DE Q
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),    }
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL'), # Carga la URL de la DB desde las variables de entorno
+        conn_max_age=600 # Opcional: Tiempo máximo de vida de la conexión en segundos
+    )
 }
 
 
@@ -167,7 +168,24 @@ CHANNEL_LAYERS = {
         },
     },
 }
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME') # Por ejemplo, 'us-east-1'
 
+AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
+AWS_S3_FILE_OVERWRITE = False # Evita sobrescribir archivos con el mismo nombre
+AWS_DEFAULT_ACL = None # Define permisos por defecto para objetos subidos a S3
+AWS_QUERYSTRING_AUTH = False # No incluir parámetros de autenticación en la URL
+
+# Configuración para archivos estáticos
+STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+STATIC_URL = 'https://%s/%s/' % (AWS_S3_CUSTOM_DOMAIN, 'static') # URL para estáticos en S3
+
+# Configuración para archivos de medios (media files)
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+MEDIA_URL = 'https://%s/%s/' % (AWS_S3_CUSTOM_DOMAIN, 'media') # URL para medios en S3
+# Configuración de autenticación
 LOGIN_REDIRECT_URL = '/'  # Redirige a la página principal después de iniciar sesión
 LOGOUT_REDIRECT_URL = '/' # Redirige a la página principal después de cerrar sesión
 LOGIN_URL = '/accounts/login/' # La URL de tu página de inicio de sesión
