@@ -65,7 +65,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'channels',
     #'chat',
-    'users',
+    'accounts',
     'crispy_forms', # Asegúrate de que esto esté también si lo usas
     'crispy_bootstrap4'
 ]
