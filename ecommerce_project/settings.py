@@ -9,50 +9,50 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-import os 
+import os
 from pathlib import Path
 from decimal import Decimal
-import dj_database_url # Añade esta si no la tienes, es útil para DB_URL
+import dj_database_url
 from dotenv import load_dotenv # Para cargar variables de entorno en desarrollo
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Cargar variables de entorno al inicio. Es crucial que esto esté ANTES de que se usen.
+load_dotenv() #
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
+# Definición de BASE_DIR: Hay dos líneas, una es redundante.
+# La versión de pathlib.Path es moderna y preferible.
+BASE_DIR = Path(__file__).resolve().parent.parent #
+# BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) # Esta línea es redundante y puede eliminarse
 
+# --- CONFIGURACIÓN DE ARCHIVOS ESTÁTICOS Y DE MEDIOS (¡OPTIMIZADO PARA S3!) ---
+
+# Configuración inicial para desarrollo (si no se usan S3 variables de entorno)
+# Estas URL/STORAGE serán sobrescritas por la configuración de S3 si las variables de entorno están presentes.
 STATIC_URL = 'static/'
-# Asegúrate de que STATICFILES_DIRS esté configurado correctamente
-# para que Django pueda encontrar tus archivos estáticos.
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'), # <-- ¡Así es como debería estar!
+    os.path.join(BASE_DIR, 'static'),
 ]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') # Directorio donde 'collectstatic' recolectará los archivos
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'excel_files') # Apunta a tu nueva carpeta 'excel_files'
+# Asegúrate de que MEDIA_ROOT sea una única definición correcta.
+# Había dos MEDIA_ROOT, una apuntando a 'excel_files' y otra a 'media'. Elige una.
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media') # Directorio local para archivos de medios
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-rgj+s!a#y(5+kow9gw#$$x7w5q$gzte+fg!lh(!g*0$lts8u_s'
-SECRET_KEY = 'django-insecure-m_k#w+o%2b@t%9e+6)7&g_q^i$5!j8)u!7v0e7x0e(6q9t5w!l!'
+# --- VARIABLES DE ENTORNO Y SEGURIDAD ---
+
+# SECRET_KEY: Solo una definición final. Asegúrate que la variable de entorno se use.
+# La lógica para 'if not SECRET_KEY and not DEBUG' es buena.
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+if not SECRET_KEY: # Simplificado, ya que si DEBUG es True, no lanzará excepción
+    if not os.environ.get('DJANGO_DEBUG', 'False') == 'True': # Verifica si estamos en producción (DEBUG False)
+        raise Exception("SECRET_KEY must be set in production environment!")
 
-if not SECRET_KEY and not DEBUG:
-    raise Exception("SECRET_KEY must be set in production environment!")
+# DEBUG: Cargar desde variable de entorno. La forma actual es correcta.
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-# Directorio donde Django buscará los archivos de media (fotos de productos, excel, etc.)
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-# La URL desde la que se servirán los archivos de media
-MEDIA_URL = '/media/'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True' # Carga desde variable de entorno o por defecto False
-
+# ALLOWED_HOSTS: Cargar desde variable de entorno. Correcto.
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 
-
-# Application definition
+# --- APLICACIONES Y MIDDLEWARE ---
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -61,13 +61,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # Añade 'storages' aquí para que Django sepa manejar S3.
+    'storages',
     'productos',
     'rest_framework',
     'channels',
-    #'chat',
+    #'chat', # Descomenta si lo usas
     'accounts',
-    'crispy_forms', # Asegúrate de que esto esté también si lo usas
-    'crispy_bootstrap4'
+    'crispy_forms',
+    'crispy_bootstrap4',
 ]
 
 MIDDLEWARE = [
@@ -85,7 +87,7 @@ ROOT_URLCONF = 'ecommerce_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')], # <--- ¡ASEGÚRATE DE QUE ESTA LÍNEA ESTÉ ASÍ!
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -98,26 +100,19 @@ TEMPLATES = [
     },
 ]
 
-# ...
 WSGI_APPLICATION = 'ecommerce_project.wsgi.application'
-ASGI_APPLICATION = 'ecommerce_project.asgi.application' # <--- ¡ASEGÚRATE DE QUE ESTÉ ASÍ!
-# ...
+ASGI_APPLICATION = 'ecommerce_project.asgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+# --- BASE DE DATOS ---
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'), # Carga la URL de la DB desde las variables de entorno
-        conn_max_age=600 # Opcional: Tiempo máximo de vida de la conexión en segundos
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600
     )
 }
 
-
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
+# --- VALIDACIÓN DE CONTRASEÑA, INTERNACIONALIZACIÓN, ETC. (Parecen correctos) ---
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -133,64 +128,63 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
-LANGUAGE_CODE = 'en-us'
-
+LANGUAGE_CODE = 'es-mx'
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
-STATIC_URL = 'static/'
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Configuración de Django Channels
+# --- CONFIGURACIÓN DE DJANGO CHANNELS ---
+
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels_redis.pubsub.RedisPubSubChannelLayer', # O 'channels_redis.core.RedisChannelLayer' para una configuración más básica
+        'BACKEND': 'channels_redis.pubsub.RedisPubSubChannelLayer', # O 'channels_redis.core.RedisChannelLayer'
         'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)], # La dirección y puerto de tu servidor Redis
+            # Aquí necesitarás el endpoint de tu servidor Redis en producción.
+            # Puedes usar Amazon ElastiCache para Redis.
+            # Lo cargarás desde una variable de entorno.
+            "hosts": [os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379')],
         },
     },
 }
+
+# --- CONFIGURACIÓN DE AWS S3 PARA ARCHIVOS ESTÁTICOS Y DE MEDIOS (¡CON VARIABLES DE ENTORNO!) ---
+
+# Asegúrate de que estas variables se carguen desde el entorno de Elastic Beanstalk.
 AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME') # Por ejemplo, 'us-east-1'
 
-AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
-AWS_S3_FILE_OVERWRITE = False # Evita sobrescribir archivos con el mismo nombre
-AWS_DEFAULT_ACL = None # Define permisos por defecto para objetos subidos a S3
-AWS_QUERYSTRING_AUTH = False # No incluir parámetros de autenticación en la URL
+# Solo define AWS_S3_CUSTOM_DOMAIN si vas a usar CloudFront.
+# Si solo usas S3, puedes dejarlo como está o quitarlo y dejar las URLs de STATIC_URL/MEDIA_URL más simples.
+# Si usas CloudFront, AWS_S3_CUSTOM_DOMAIN debe ser tu URL de CloudFront (ej. d1234.cloudfront.net)
+AWS_S3_CUSTOM_DOMAIN = os.environ.get('AWS_S3_CUSTOM_DOMAIN', f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com')
 
-# Configuración para archivos estáticos
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
+AWS_QUERYSTRING_AUTH = False # No incluir parámetros de autenticación en la URL de los objetos públicos
+
+# Configuración para archivos estáticos (Django buscará aquí si no se usa S3)
 STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-STATIC_URL = 'https://%s/%s/' % (AWS_S3_CUSTOM_DOMAIN, 'static') # URL para estáticos en S3
+# Usa el dominio personalizado si está configurado, de lo contrario el de S3 por defecto.
+STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/static/'
 
-# Configuración para archivos de medios (media files)
+
+# Configuración para archivos de medios
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-MEDIA_URL = 'https://%s/%s/' % (AWS_S3_CUSTOM_DOMAIN, 'media') # URL para medios en S3
-# Configuración de autenticación
-LOGIN_REDIRECT_URL = '/'  # Redirige a la página principal después de iniciar sesión
-LOGOUT_REDIRECT_URL = '/' # Redirige a la página principal después de cerrar sesión
-LOGIN_URL = '/accounts/login/' # La URL de tu página de inicio de sesión
-IVA_RATE = Decimal('0.16') # 16% de IVA, usa Decimal para precisión
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# Usa el dominio personalizado si está configurado, de lo contrario el de S3 por defecto.
+MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
 
-load_dotenv()
+
+# --- CONFIGURACIÓN DE AUTENTICACIÓN Y OTROS (Parecen correctos) ---
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+LOGIN_URL = '/accounts/login/'
+IVA_RATE = Decimal('0.16')
+# Estas dos líneas son redundantes si ya las definiste arriba y se van a usar con S3.
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = os.path.join(BASE_DIR, 'media') # Esta solo sería para desarrollo local.
+
+# load_dotenv() # Esta línea debe ir al principio del archivo, como se sugirió.

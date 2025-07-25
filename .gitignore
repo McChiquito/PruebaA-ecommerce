@@ -19,3 +19,7 @@ staticfiles/       # Archivos estáticos recolectados por `collectstatic`
 
 # Logs y otros
 *.log
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
