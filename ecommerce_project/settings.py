@@ -41,17 +41,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media') # Directorio local para archivos de
 
 # SECRET_KEY: Solo una definición final. Asegúrate que la variable de entorno se use.
 # La lógica para 'if not SECRET_KEY and not DEBUG' es buena.
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
-if not SECRET_KEY: # Simplificado, ya que si DEBUG es True, no lanzará excepción
-    if not os.environ.get('DJANGO_DEBUG', 'False') == 'True': # Verifica si estamos en producción (DEBUG False)
-        raise Exception("SECRET_KEY must be set in production environment!")
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'QDLshDFQ74i2QDLRODQfQ2QDLshDFQ74i2QDLRODQfQ2QDLshDFQ74i2QDLRODQfQ2') # Asegúrate de que esta variable esté definida en tu entorno
 
 # DEBUG: Cargar desde variable de entorno. La forma actual es correcta.
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 
 # ALLOWED_HOSTS: Cargar desde variable de entorno. Correcto.
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
-
+ALLOWED_HOSTS = 'yahirzaele1.pythonanywhere.com'
 # --- APLICACIONES Y MIDDLEWARE ---
 
 INSTALLED_APPS = [
@@ -106,10 +102,10 @@ ASGI_APPLICATION = 'ecommerce_project.asgi.application'
 # --- BASE DE DATOS ---
 
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600
-    )
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3', # O si lo tienes en otra subcarpeta: BASE_DIR / 'data' / 'db.sqlite3'
+    }
 }
 
 # --- VALIDACIÓN DE CONTRASEÑA, INTERNACIONALIZACIÓN, ETC. (Parecen correctos) ---
@@ -148,23 +144,6 @@ CHANNEL_LAYERS = {
         },
     },
 }
-
-# --- CONFIGURACIÓN DE AWS S3 PARA ARCHIVOS ESTÁTICOS Y DE MEDIOS (¡CON VARIABLES DE ENTORNO!) ---
-
-# Asegúrate de que estas variables se carguen desde el entorno de Elastic Beanstalk.
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
-AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME') # Por ejemplo, 'us-east-1'
-
-# Solo define AWS_S3_CUSTOM_DOMAIN si vas a usar CloudFront.
-# Si solo usas S3, puedes dejarlo como está o quitarlo y dejar las URLs de STATIC_URL/MEDIA_URL más simples.
-# Si usas CloudFront, AWS_S3_CUSTOM_DOMAIN debe ser tu URL de CloudFront (ej. d1234.cloudfront.net)
-AWS_S3_CUSTOM_DOMAIN = os.environ.get('AWS_S3_CUSTOM_DOMAIN', f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com')
-
-AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL = None
-AWS_QUERYSTRING_AUTH = False # No incluir parámetros de autenticación en la URL de los objetos públicos
 
 # Configuración para archivos estáticos (Django buscará aquí si no se usa S3)
 STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
