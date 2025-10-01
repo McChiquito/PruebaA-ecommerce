@@ -18,7 +18,9 @@ import json
 from django.utils import timezone
 from .forms import ExcelUploadForm
 from django.urls import reverse
-
+# --- VISTA PARA LA PÁGINA DE INICIO ---
+def inicio(request):
+    return render(request, 'index.html')
 # --- VISTA PARA LA PÁGINA DE CARGA DE ARCHIVO EXCEL ---
 @login_required
 @user_passes_test(lambda u: u.is_staff)

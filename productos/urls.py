@@ -1,5 +1,7 @@
 # productos/urls.py
 from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
 from . import views
 from .views import ProductoAPIView
 
@@ -15,3 +17,8 @@ urlpatterns = [
  #   path('admin-chat/<int:conversation_id>/', views.admin_chat_panel, name='admin_chat_panel_detail'),
     path('admin-dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
 ]
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+

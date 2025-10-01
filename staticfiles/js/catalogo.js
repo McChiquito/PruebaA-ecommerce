@@ -47,8 +47,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let categorias = [];
     let currentPage = 1;
     let itemsPerPage = 6; // Mostrar 6 productos por página por defecto
-    let cart = JSON.parse(localStorage.getItem('cart')) || {}; // Cargar carrito de localStorage
-
+    /*let cart = JSON.parse(localStorage.getItem('cart')) || {}; // Cargar carrito de localStorage
+    /*
     // Eventos para abrir/cerrar modal de carrito
     if (cartButton && cartModal && cerrarCartModal && clearCartButton) {
         cartButton.addEventListener('click', () => {
@@ -68,12 +68,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-
+    */
     // Evento para cerrar modal al hacer clic fuera
     window.addEventListener('click', (event) => {
-        if (event.target == cartModal) {
-            cartModal.style.display = 'none';
-        }
+     //   if (event.target == cartModal) {
+       //     cartModal.style.display = 'none';
+        //}
         if (event.target == productoModal) {
             productoModal.style.display = 'none';
         }
@@ -98,13 +98,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const sku = e.target.dataset.sku;
                 console.log('Delegación: Botón "Ver Detalles" clicado para SKU:', sku);
                 mostrarDetallesProducto(sku);
-            } else if (e.target.classList.contains('agregar-carrito')) {
+            }/* else if (e.target.classList.contains('agregar-carrito')) {
                 const sku = e.target.dataset.sku;
                 const producto = productos.find(p => p.sku === sku);
                 if (producto) {
                     agregarAlCarrito(producto, 1);
                 }
-            }
+            }*/
         });
     }
 
@@ -117,13 +117,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const sku = e.target.dataset.sku;
                 console.log('Delegación: Botón "Ver Detalles" (Armadas) clicado para SKU:', sku);
                 mostrarDetallesProducto(sku);
-            } else if (e.target.classList.contains('agregar-carrito')) {
+            }/* else if (e.target.classList.contains('agregar-carrito')) {
                 const sku = e.target.dataset.sku;
                 const producto = productos.find(p => p.sku === sku);
                 if (producto) {
                     agregarAlCarrito(producto, 1);
                 }
-            }
+            }*/
         });
     }
 
@@ -140,8 +140,8 @@ document.addEventListener('DOMContentLoaded', function() {
             <p class="product-stock">${producto.inventario > 0 ? `En existencia: ${producto.inventario}` : 'Agotado'}</p>
             <div class="product-actions">
                 <button class="btn btn-primary ver-detalles" data-sku="${producto.sku}">Ver Detalles</button>
-                <button class="btn btn-secondary agregar-carrito" data-sku="${producto.sku}">Agregar al Carrito</button>
-            </div>
+
+                </div>
         `;
         container.appendChild(productCard);
     }
@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('Productos cargados:', productos);
             fetchCategorias(); // Cargar categorías después de los productos
             aplicarFiltros(); // Aplicar filtros iniciales y renderizar
-            updateCartDisplay(); // Actualizar el carrito al cargar la página
+         //   updateCartDisplay(); // Actualizar el carrito al cargar la página
         } catch (error) {
             console.error('Error al cargar productos:', error);
             if (catalogoGrid) {
@@ -364,7 +364,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     // Funciones del carrito de compras
-    function agregarAlCarrito(producto, cantidad) {
+   /*function agregarAlCarrito(producto, cantidad) {
         if (producto.inventario === 0) {
             alert('Producto agotado. No se puede agregar al carrito.');
             return;
@@ -388,17 +388,17 @@ document.addEventListener('DOMContentLoaded', function() {
         };
         localStorage.setItem('cart', JSON.stringify(cart));
         updateCartDisplay();
-    }
+    }*/
 
-    function removerDelCarrito(sku) {
+    /*function removerDelCarrito(sku) {
         if (cart[sku]) {
             delete cart[sku];
             localStorage.setItem('cart', JSON.stringify(cart));
             updateCartDisplay();
         }
-    }
+    }*/
 
-    function actualizarCantidadCarrito(sku, nuevaCantidad) {
+    /*function actualizarCantidadCarrito(sku, nuevaCantidad) {
         if (cart[sku]) {
             const productoEnStock = productos.find(p => p.sku === sku);
             if (productoEnStock && nuevaCantidad > productoEnStock.inventario) {
@@ -413,9 +413,9 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.setItem('cart', JSON.stringify(cart));
             updateCartDisplay();
         }
-    }
+    }*/
 
-    function updateCartDisplay() {
+    /*function updateCartDisplay() {
         if (!cartItemsContainer || !cartCountSpan || !cartTotalItemsSpan || !cartTotalPriceSpan || !emptyCartMessage) {
             console.error("Elementos del carrito no encontrados en el DOM.");
             return;
@@ -495,7 +495,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 actualizarCantidadCarrito(sku, newQuantity);
             });
         });
-    }
+    }*/
 
 
     // Función para mostrar detalles del producto en el modal
@@ -518,11 +518,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (producto.inventario > 0) {
                 modalExistencia.textContent = `En existencia: ${producto.inventario}`;
                 modalExistencia.style.color = 'green';
-                agregarModalCarritoButton.disabled = false;
+           //     agregarModalCarritoButton.disabled = false;
             } else {
                 modalExistencia.textContent = 'Agotado';
                 modalExistencia.style.color = 'red';
-                agregarModalCarritoButton.disabled = true;
+           //     agregarModalCarritoButton.disabled = true;
             }
 
             modalGarantia.textContent = producto.garantia_meses ? `Garantía: ${producto.garantia_meses} meses` : '';
@@ -552,7 +552,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
 
-            // Configurar botón "Agregar al Carrito" del modal
+            /*// Configurar botón "Agregar al Carrito" del modal
             agregarModalCarritoButton.onclick = () => {
                 const cantidad = parseInt(modalCantidadInput.value, 10);
                 if (!isNaN(cantidad) && cantidad > 0 && cantidad <= producto.inventario) {
@@ -562,7 +562,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     alert('Cantidad inválida o excede el inventario disponible.');
                 }
-            };
+            };*/
 
             productoModal.style.display = 'block'; // Mostrar el modal
         } else {

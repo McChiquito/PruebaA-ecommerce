@@ -545,6 +545,7 @@ body.modal-open {
     border: 1px solid #ccc;
     border-radius: var(--border-radius);
     text-align: center;
+    appearance: textfield; /* Oculta las flechas en navegadores modernos */
     -moz-appearance: textfield; /* Oculta las flechas en Firefox */
 }
 /* Oculta las flechas de los input type="number" para Chrome, Safari, Edge */
