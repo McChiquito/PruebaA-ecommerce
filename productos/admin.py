@@ -2,11 +2,12 @@
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
-from .models import Producto, Conversation, Categoria,Proveedor,TipoCambio, ChatMessage # Asegúrate de importar todos los modelos
+from .models import Producto, Conversation, Categoria,Proveedor,TipoCambio, ChatMessage, ConfiguracionGlobal
 
 admin.site.register(Proveedor)
 admin.site.register(TipoCambio)
 
+admin.site.register(ConfiguracionGlobal)
 @admin.register(Categoria)
 class CategoriaAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'slug')

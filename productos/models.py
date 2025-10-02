@@ -22,6 +22,16 @@ class Categoria(models.Model):
     class Meta:
         verbose_name = "Categoría"
         verbose_name_plural = "Categorías"
+# productos/models.py
+class ConfiguracionGlobal(models.Model):
+    tasa_cambio_usd_mxn = models.DecimalField(max_digits=10, decimal_places=2, default=17.0)
+
+    def __str__(self):
+        return f"Tasa actual: {self.tasa_cambio_usd_mxn}"
+
+    class Meta:
+        verbose_name = "Configuración Global"
+        verbose_name_plural = "Configuración Global"
 
 
 # 2. Definición de Proveedor
@@ -65,6 +75,7 @@ class TipoCambio(models.Model):
 # 4. Definición de Producto
 class Producto(models.Model):
     sku = models.CharField(max_length=50, unique=True)
+    stock = models.IntegerField(default=0)
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True, null=True)
     categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, blank=True)
