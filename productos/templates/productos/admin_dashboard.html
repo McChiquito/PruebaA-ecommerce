@@ -1,0 +1,62 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - VICVAR COMPUTER</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+    <header class="main-header">
+        <div class="header-content">
+            <div class="header-branding">
+                <div class="logo">
+                    <img src="{% static 'img/logo_vicvar_computer.png' %}" alt="Logo VICVAR COMPUTER">
+                </div>
+                <div class="header-tittle">VICVAR COMPUTER</div>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="{% url 'productos:index' %}">Inicio</a></li>
+                    <li><a href="{% url 'productos:admin_dashboard' %}">Dashboard</a></li>
+                    <li><a href="{% url 'productos:upload_excel_page' %}">Subir Catálogo</a></li>
+
+                    {% comment %}
+                    <li><a href="{% url 'productos:admin_chat_panel' %}">Chat Admin</a></li>
+                    {% endcomment %}
+                </ul>
+            </nav>
+            <div class="auth-controls">
+                {% if user.is_authenticated %}
+                    <span>Hola, {{ user.username }}!</span>
+                    <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-header-auth">Cerrar Sesión</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <main class="admin-content">
+        <section class="dashboard-section">
+            <h1>Bienvenido al Panel de Administración</h1>
+            <p>Desde aquí puedes subir catálogos de proveedores y gestionar productos.</p>
+
+            <div class="dashboard-actions">
+                <a href="{% url 'productos:upload_excel_page' %}" class="btn-action">Subir nuevo catálogo</a>
+
+                {% comment %}
+                <a href="{% url 'admin_chat_panel' %}" class="btn-action">Ir al Chat</a>
+                {% endcomment %}
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <p>&copy; 2025 VICVAR COMPUTER. Todos los derechos reservados.</p>
+    </footer>
+
+</body>
+</html>

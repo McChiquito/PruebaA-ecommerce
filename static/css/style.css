@@ -1,0 +1,1921 @@
+/* General / Base */
+:root {
+    /* COLORES AJUSTADOS A TU PALETA ORIGINAL */
+    --color-primary: #0E3B40; /* Azul brillante, para acciones principales */
+    --color-darker-primary: #080D26; /* Azul más oscuro para hover */
+    --color-secondary: #63f2f2; /* Mismo azul para énfasis secundario (si se usa) */
+    --color-tertiary: #4CAF50; /* Un verde que tenías para algunos botones, lo mantengo */
+    --color-background: #F0F0F0; /* Fondo gris claro */
+    --color-text: #16161D; /* Texto principal azul oscuro/casi negro */
+    --color-light-text: #666; /* Texto secundario gris */
+    --color-button--header: #F2541B; /* Nuevo color para botones de header y terciarios */
+    --color-white-smoke: whitesmoke; /* Definido para mayor consistencia */
+    --color-red-danger: #dc3545; /* Rojo para estados de peligro/agotado */
+
+    --font-family-primary: 'Arial', sans-serif;
+    --border-radius: 8px;
+    --box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    --transition-speed: 0.3s ease; /* Transición para efectos suaves */
+    --scrollbar-width: 17px; /* Ancho estimado de la barra de desplazamiento */
+}
+
+body {
+    font-family: var(--font-family-primary);
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box; /* Asegura que padding y border se incluyan en el ancho/alto */
+    background-color: var(--color-background);
+    color: var(--color-text);
+    line-height: 1.6;
+}
+
+/* Evita el scroll en el body cuando un modal está abierto */
+body.modal-open {
+    overflow: hidden;
+    padding-right: var(--scrollbar-width); /* Compensar el ancho de la barra de desplazamiento */
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px;
+}
+
+/* Header */
+.main-header {
+    background-color: var(--color-darker-primary);
+    box-shadow: var(--box-shadow);
+    padding: 0;
+    height: 80px; /* Altura fija */
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    display: flex; /* Añadido para mejor control de contenido en header */
+    align-items: center; /* Centrar verticalmente el contenido del header */
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    width: 100%; /* Asegura que ocupe el ancho del container */
+}
+
+.header-branding {
+    display: flex;
+    align-items: center;
+}
+
+.logo img {
+    max-height: 70px; /* Ajustado ligeramente menor que la altura del header para un pequeño margen */
+    width: auto;
+    margin-right: 10px;
+}
+
+.header-tittle {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: var(--color-white-smoke); /* Usando la variable */
+}
+
+.main-nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+.main-nav ul li {
+    margin-left: 25px;
+}
+
+.main-nav ul li a {
+    text-decoration: none;
+    color: var(--color-white-smoke); /* Usando la variable */
+    font-weight: bold;
+    transition: color var(--transition-speed);
+}
+
+.main-nav ul li a:hover {
+    color: var(--color-primary);
+}
+
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(to right, #F0F0F0, #ffffff);
+    padding: 60px 0;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+}
+
+.hero-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 40px;
+    text-align: left;
+    width: 100%; /* Asegura que ocupe el ancho disponible del container */
+}
+
+.hero-text {
+    flex: 1;
+}
+
+.hero-text h1 {
+    font-size: 2.8em;
+    color: var(--color-primary);
+    margin-bottom: 10px;
+}
+
+.hero-text h2 {
+    font-size: 2em;
+    color: var(--color-text);
+    margin-bottom: 20px;
+    line-height: 1.3;
+}
+
+.hero-text p {
+    font-size: 1.1em;
+    color: var(--color-light-text);
+    margin-bottom: 30px;
+}
+
+.hero-buttons .btn {
+    margin-right: 15px;
+}
+
+.hero-image {
+    flex: 1;
+    text-align: right;
+}
+
+.hero-image img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Common Button Styles */
+.btn {
+    display: inline-block;
+    padding: 12px 25px;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color var(--transition-speed), color var(--transition-speed), border-color var(--transition-speed);
+    border: none;
+    cursor: pointer;
+    text-align: center;
+}
+
+.btn-primary {
+    background-color: transparent;
+    color: var(--color-primary);
+    border: 2px solid var(--color-primary);
+}
+
+.btn-primary:hover {
+    background-color: var(--color-button--header);
+    color: var(--color-white-smoke);
+    border-color: var(--color-button--header);
+}
+
+.btn-secondary {
+    background-color: transparent;
+    color: var(--color-primary);
+    border: 2px solid var(--color-primary);
+}
+
+.btn-secondary:hover {
+    background-color: var(--color-button--header);
+    color: var(--color-white-smoke);
+    border-color: var(--color-button--header);
+}
+
+.btn-tertiary {
+    background-color: var(--color-button--header);
+    color: var(--color-white-smoke);
+    border: none;
+}
+
+.btn-tertiary:hover {
+    background-color: #A35E05;
+}
+
+.btn.disabled, .btn[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: #ccc !important;
+    color: #666 !important;
+    border-color: #ccc !important;
+}
+
+/* Novedades Section */
+.section-novedades {
+    background-color: #fcfcfc;
+    padding: 50px 0;
+    text-align: center;
+}
+
+.section-novedades h2 {
+    font-size: 2.5em;
+    color: var(--color-text);
+    margin-bottom: 30px;
+}
+
+/* ESTILOS PARA EL CARRUSEL DE NOVEDADES */
+.novedades-carousel-container {
+    position: relative;
+    padding: 0 40px;
+    margin: 0 auto;
+    max-width: 1200px;
+}
+
+/* Estilos para los botones de las categorías dentro del aside */
+#filtros-categorias {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+/* Reusa los estilos existentes para .tab-button */
+.tab-button {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    background-color: #f9f9f9;
+    color: #333;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color var(--transition-speed), color var(--transition-speed), border-color var(--transition-speed);
+}
+
+.tab-button:hover:not(.active) {
+    background-color: #e0e0e0;
+    border-color: #bbb;
+}
+
+.tab-button.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+    font-weight: bold;
+}
+
+.novedades-grid,.computadoras-armadas-grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(320px, 1fr); /* Aumenta el espacio mínimo de cada tarjeta */
+    gap: 40px; /* Más espacio entre tarjetas */
+    overflow-x: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 20px;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary) #e0e0e0;
+}
+
+
+.novedades-grid::-webkit-scrollbar-track {
+    background: #e0e0e0;
+    border-radius: 5px;
+}
+
+.novedades-grid::-webkit-scrollbar-thumb {
+    background-color: var(--color-primary);
+    border-radius: 5px;
+    border: 2px solid #e0e0e0;
+}
+
+.novedad-card {
+    background-color: #fff;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 20px;
+    text-align: center;
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    scroll-snap-align: start;
+    flex-shrink: 0;
+    width: 280px;
+}
+
+.novedad-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.novedad-card img {
+    max-width: 100%;
+    height: 150px;
+    object-fit: contain;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+.novedad-card h3 {
+    font-weight: bold;
+    color: var(--color-text);
+    margin-bottom: 5px;
+    flex-grow: 1;
+}
+
+.novedad-card .producto-precio {
+    color: var(--color-primary);
+    font-size: 1.2em;
+    margin-bottom: 15px;
+}
+
+.novedad-card .btn-agregar {
+    background-color: var(--color-primary);
+    color: var(--color-white-smoke);
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color var(--transition-speed);
+}
+.novedad-card .btn-agregar:hover {
+    background-color: var(--color-darker-primary);
+}
+
+/* Estilos de los botones de carrusel (flechas) */
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    color: var(--color-white-smoke);
+    border: none;
+    padding: 10px 15px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.5em;
+    z-index: 10;
+    transition: background-color var(--transition-speed);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.carousel-btn:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.carousel-btn.prev {
+    left: 0;
+}
+
+.carousel-btn.next {
+    right: 0;
+}
+
+/* Estado deshabilitado para los botones de carrusel */
+.carousel-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* --- Estilos Base del Modal (El fondo oscuro y cómo aparece/desaparece) --- */
+.modal {
+    display: none; /* JS lo cambia a 'flex' */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;   /* ¡IMPORTANTE! Ocupa todo el ancho de la pantalla */
+    height: 100%;  /* ¡IMPORTANTE! Ocupa toda la altura de la pantalla */
+    overflow: auto;
+    background-color: rgba(0,0,0,0.7); /* Fondo oscuro semi-transparente */
+
+    /* Para centrar el contenido del modal (el .modal-body) dentro de este overlay */
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content { /* Esto es para el modal del carrito */
+    background-color: #fefefe;
+    margin: auto; /* 'margin: auto' funciona bien aquí si no usas flexbox para centrar en el padre */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 90%;
+    max-width: 600px; /* Ancho máximo para el modal del carrito */
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+    animation-name: animatetop;
+    animation-duration: 0.4s;
+    position: relative;
+    border-radius: 8px;
+    min-height: 150px;
+    /* display: block; o flex, según cómo organices el contenido del carrito */
+}
+
+/* Estado activo del modal (cuando se muestra) */
+.modal.active {
+    opacity: 1; /* Se vuelve visible */
+    visibility: visible; /* Se vuelve interactuable */
+}
+
+/* --- Botón de Cerrar (la 'X') --- */
+.close-button {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute; /* Posiciona respecto a su padre posicionado (.modal-body o .modal-content) */
+    top: 10px;
+    right: 20px;
+    cursor: pointer;
+    transition: 0.3s;
+    z-index: 1001; /* Asegura que esté por encima del contenido del modal */
+}
+.close-button:hover,
+.close-button:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+@-webkit-keyframes animatetop {
+    from {top:-300px; opacity:0}
+    to {top:0; opacity:1}
+}
+
+@keyframes animatetop {
+    from {top:-300px; opacity:0}
+    to {top:0; opacity:1}
+}
+/* --- Contenedor Principal del Contenido del Modal (tu .modal-body) --- */
+.modal-body { /* Este es el contenedor DIRECTO del contenido del modal de producto */
+    background-color: #fefefe; /* Fondo blanco */
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%; /* Ancho del contenido del modal */
+    max-width: 900px; /* Ancho máximo para el modal de producto */
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+    position: relative; /* Necesario para posicionar el botón de cierre */
+    min-height: 200px; /* Altura mínima para el producto */
+    color: #333; /* Color de texto para el producto */
+
+    /* Distribución interna: imagen y detalles */
+    display: flex; /* Habilita Flexbox */
+    gap: 20px; /* Espacio entre la imagen y los detalles */
+    flex-direction: column; /* Por defecto, apilados en pantallas pequeñas */
+
+    /* Para centrar el modal-body dentro de su padre (el overlay .modal) */
+    margin: auto; /* ¡Añade o confirma esta línea! */
+}
+
+/* Media query para pantallas más grandes */
+@media (min-width: 768px) {
+    .modal-body {
+        flex-direction: row; /* ¡ASEGÚRATE DE QUE ESTÉ ASÍ para foto a la izquierda y datos a la derecha! */
+    }
+}
+
+/* --- Contenedor de la Imagen (tu .modal-image-gallery) --- */
+.modal-image-gallery {
+    flex: 0 0 40%; /* La imagen ocupa el 40% del ancho del .modal-body y no crece/decrece */
+    max-width: 40%;
+    display: flex; /* Para centrar la imagen dentro de su propio contenedor si es necesario */
+    justify-content: center;
+    align-items: flex-start; /* Alinea la imagen a la parte superior de su contenedor */
+}
+
+.modal-image-gallery img {
+    max-width: 100%; /* La imagen no excede el ancho de su contenedor */
+    height: auto; /* Mantiene la proporción de la imagen */
+    border-radius: var(--border-radius); /* Bordes redondeados para la imagen */
+    object-fit: cover; /* Asegura que la imagen cubra su área sin distorsionarse */
+}
+
+/* --- Sección de Detalles del Producto (tu .modal-details) --- */
+.modal-details {
+    flex: 1; /* La sección de detalles ocupa el espacio restante */
+    display: flex; /* Usa Flexbox para organizar los elementos internos (nombre, descripción, precio, etc.) */
+    flex-direction: column; /* Los elementos de los detalles se apilan verticalmente */
+    gap: 10px; /* Espacio entre cada elemento (párrafos, títulos) */
+}
+
+.modal-details h2 {
+    color: var(--color-primary); /* Color de título (tu azul principal) */
+    margin-top: 0;
+    font-size: 1.8em;
+}
+
+.modal-details p {
+    color: var(--color-text); /* Color de texto principal */
+    line-height: 1.5;
+}
+
+.modal-details #modal-precio { /* Estilo específico para el precio */
+    font-size: 1.5em;
+    font-weight: bold;
+    color: var(--color-button--header); /* Un color distintivo para el precio (tu naranja) */
+}
+
+/* --- Control de Cantidad (tu .modal-quantity-control) --- */
+.modal-quantity-control {
+    display: flex; /* Flexbox para la etiqueta y el input */
+    align-items: center; /* Alinea verticalmente la etiqueta y el input */
+    gap: 10px; /* Espacio entre ellos */
+    margin-top: 15px; /* Espacio superior */
+    margin-bottom: 15px; /* Espacio inferior */
+}
+
+.modal-quantity-control label {
+    font-weight: bold;
+    color: var(--color-text);
+}
+
+.modal-quantity-control input[type="number"] {
+    width: 60px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+    text-align: center;
+    appearance: textfield; /* Oculta las flechas en navegadores modernos */
+    -moz-appearance: textfield; /* Oculta las flechas en Firefox */
+}
+/* Oculta las flechas de los input type="number" para Chrome, Safari, Edge */
+.modal-quantity-control input[type="number"]::-webkit-outer-spin-button,
+.modal-quantity-control input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* --- Botón "Agregar al carrito" (tu #agregar-modal-carrito) --- */
+#agregar-modal-carrito {
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    border-radius: var(--border-radius);
+    /* Asumo que ya tienes estilos para .btn .btn-secondary */
+    align-self: flex-start; /* Alinea el botón al inicio de la columna de detalles */
+    margin-top: auto; /* Esto empuja el botón hacia la parte inferior de la columna de detalles si hay mucho contenido arriba */
+}
+
+/* --- Texto de Existencia y Garantía (tus #modal-existencia y #modal-garantia) --- */
+#modal-existencia { /* Tu párrafo con el ID modal-existencia */
+    font-weight: bold;
+    color: var(--color-text);
+    /* Puedes añadir aquí estilos condicionales con JS para cambiar color según la existencia (ej: red-danger si agotado) */
+}
+
+#modal-garantia {
+    color: var(--color-light-text); /* Texto gris más claro */
+    font-size: 0.9em;
+}
+
+/* --- Sección de Características Adicionales (tu #modal-caracteristicas-adicionales) --- */
+#modal-caracteristicas-adicionales {
+    margin-top: 20px;
+    border-top: 1px solid #eee; /* Línea separadora */
+    padding-top: 15px;
+}
+
+#modal-caracteristicas-adicionales h4 {
+    color: var(--color-primary);
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+#lista-caracteristicas-adicionales {
+    list-style: disc inside; /* Puntos para los ítems de la lista */
+    padding-left: 20px;
+    color: var(--color-light-text);
+}
+
+#lista-caracteristicas-adicionales li {
+    margin-bottom: 5px;
+}
+
+/* --- Ajustes Responsivos para Pantallas Más Pequeñas --- */
+@media (max-width: 768px) {
+    .modal-body { /* El contenedor principal del contenido del modal */
+        flex-direction: column; /* Apila la imagen y los detalles verticalmente */
+        align-items: center; /* Centra los elementos cuando están apilados */
+        gap: 15px; /* Reduce el espacio entre elementos apilados */
+        padding: 15px; /* Reduce el padding interno */
+    }
+
+    .modal-image-gallery {
+        flex: none; /* Reinicia el flex para la imagen */
+        width: 80%; /* La imagen ocupa más ancho cuando está apilada */
+        max-width: 250px; /* Limita el ancho máximo de la imagen */
+    }
+
+    .modal-details {
+        text-align: center; /* Centra el texto de los detalles */
+        gap: 8px;
+    }
+
+    .modal-quantity-control {
+        justify-content: center; /* Centra el control de cantidad (label + input) */
+    }
+    
+    #agregar-modal-carrito {
+        width: 100%; /* Hace que el botón ocupe todo el ancho disponible */
+        align-self: center; /* Centra el botón cuando está apilado */
+    }
+
+    #modal-caracteristicas-adicionales {
+        text-align: left; /* Mantiene las características alineadas a la izquierda */
+    }
+    #lista-caracteristicas-adicionales {
+        padding-left: 0; /* Elimina el padding si el estilo de lista es "inside" */
+    }
+}
+
+/* ESTILOS ESPECÍFICOS DEL CARRITO (HEREDA DE MODAL) */
+/* --- Estilos específicos para el contenido del modal del carrito --- */
+.cart-modal-content {
+    background-color: var(--color-background);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    position: absolute; /* Para centrarlo */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 500px; /* Un ancho adecuado para un carrito */
+    width: 90%; /* Ancho responsivo */
+    max-height: 90vh; /* Para que quepa en la pantalla */
+    overflow-y: auto; /* Scroll si hay muchos ítems */
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Espacio entre secciones del carrito */
+}
+
+.cart-modal-content h2 {
+    color: var(--color-primary);
+    text-align: center;
+    margin-top: 0;
+}
+
+.cart-items-container {
+    border-top: 1px solid var(--color-light-text);
+    padding-top: 15px;
+    max-height: 300px; /* Altura máxima para la lista de ítems */
+    overflow-y: auto; /* Scroll solo en la lista de ítems si es muy larga */
+}
+
+#empty-cart-message {
+    text-align: center;
+    color: var(--color-light-text);
+    font-style: italic;
+    padding: 10px;
+}
+
+/* Estilos para cada ítem del carrito (lo que JavaScript crearía) */
+.cart-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #eee; /* Separador entre ítems */
+}
+
+.cart-item:last-child {
+    border-bottom: none; /* Eliminar el borde del último ítem */
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.cart-item img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: var(--border-radius);
+}
+
+.cart-item-details {
+    flex-grow: 1; /* Ocupa el espacio restante */
+}
+
+.cart-item-details h4 {
+    margin: 0;
+    color: var(--color-text);
+    font-size: 1.1em;
+}
+
+.cart-item-details p {
+    margin: 0;
+    color: var(--color-light-text);
+    font-size: 0.9em;
+}
+
+.cart-item-price {
+    font-weight: bold;
+    color: var(--color-button--header);
+    white-space: nowrap; /* Evita que el precio se rompa en varias líneas */
+}
+
+.cart-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.cart-item-actions input[type="number"] {
+    width: 50px;
+    padding: 5px;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+}
+
+.cart-item-actions .remove-item-btn {
+    background-color: var(--color-red-danger);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s ease;
+}
+
+.cart-item-actions .remove-item-btn:hover {
+    background-color: #c82333; /* Un rojo más oscuro */
+}
+
+.cart-summary {
+    border-top: 1px solid var(--color-light-text);
+    padding-top: 15px;
+    text-align: right;
+    font-size: 1.2em;
+}
+
+.cart-summary p {
+    margin: 5px 0;
+    color: var(--color-text);
+}
+
+.cart-summary span {
+    font-weight: bold;
+    color: var(--color-button--header);
+}
+
+.cart-actions {
+    display: flex;
+    justify-content: flex-end; /* Alinea los botones a la derecha */
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.cart-actions .btn {
+    padding: 10px 15px;
+    font-size: 1em;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+}
+
+/* --- Responsive para el modal del carrito --- */
+@media (max-width: 600px) {
+    .cart-modal-content {
+        padding: 15px;
+        max-width: 95%;
+    }
+
+    .cart-item {
+        flex-wrap: wrap; /* Permite que los elementos del ítem se envuelvan */
+        justify-content: center;
+        text-align: center;
+    }
+
+    .cart-item img {
+        width: 80px;
+        height: 80px;
+    }
+
+    .cart-item-details,
+    .cart-item-price,
+    .cart-item-actions {
+        width: 100%; /* Ocupan todo el ancho */
+        justify-content: center;
+    }
+
+    .cart-summary {
+        text-align: center;
+    }
+    
+    .cart-actions {
+        flex-direction: column; /* Apila los botones de acción */
+        align-items: center;
+    }
+    .cart-actions .btn {
+        width: 100%; /* Botones de ancho completo */
+    }
+}
+
+/* --- Estilos para el icono de carrito flotante --- */
+.cart-icon-container-floating {
+    position: fixed; /* Lo hace flotante */
+    bottom: 20px; /* Distancia desde la parte inferior */
+    right: 20px; /* Distancia desde la parte derecha */
+    z-index: 1000; /* Asegura que esté por encima de otros elementos */
+    background-color: var(--color-button--header); /* Color de fondo del botón */
+    border-radius: 50%; /* Hace el contenedor circular */
+    box-shadow: var(--box-shadow); /* Sombra para darle profundidad */
+    padding: 5px; /* Espaciado interno */
+    display: flex; /* Para centrar el botón dentro */
+    align-items: center;
+    justify-content: center;
+    width: 60px; /* Ancho del contenedor */
+    height: 60px; /* Altura del contenedor */
+    cursor: pointer;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.cart-icon-container-floating:hover {
+    transform: translateY(-5px); /* Pequeño efecto al pasar el mouse */
+    background-color: var(--color-darker-primary); /* Cambiar color al pasar el mouse */
+}
+
+.btn-cart {
+    background: none; /* Elimina el fondo por defecto del botón */
+    border: none; /* Elimina el borde */
+    color: var(--color-white-smoke); /* Color del icono y texto */
+    font-size: 1.8em; /* Tamaño del icono */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Espacio entre el icono y el contador */
+    padding: 0; /* Elimina el padding por defecto del botón */
+}
+
+.btn-cart i {
+    /* Estilos específicos para el icono de Font Awesome */
+    font-size: 1em; /* Hereda del padre, pero se puede ajustar */
+}
+
+.cart-count {
+    background-color: var(--color-primary); /* Color de fondo del contador */
+    color: var(--color-white-smoke); /* Color del texto del contador */
+    border-radius: 50%; /* Hace el contador circular */
+    padding: 3px 8px; /* Espaciado interno */
+    font-size: 0.7em; /* Tamaño de la fuente */
+    min-width: 20px; /* Ancho mínimo para que se vea bien */
+    text-align: center;
+    line-height: 1; /* Alineación vertical */
+    display: flex; /* Para centrar el número */
+    align-items: center;
+    justify-content: center;
+    position: absolute; /* Posiciona el contador sobre el icono */
+    top: -5px; /* Ajusta la posición vertical */
+    right: -5px; /* Ajusta la posición horizontal */
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    /* Inicialmente oculto si el carrito está vacío, JavaScript lo manejará */
+    display: none; 
+}
+
+/* Responsive para el icono flotante */
+@media (max-width: 768px) {
+    .cart-icon-container-floating {
+        width: 50px;
+        height: 50px;
+        bottom: 15px;
+        right: 15px;
+    }
+
+    .btn-cart {
+        font-size: 1.5em;
+    }
+
+    .cart-count {
+        font-size: 0.6em;
+        padding: 2px 6px;
+        min-width: 18px;
+        top: -3px;
+        right: -3px;
+    }
+}
+
+.catalogo-layout {
+    display: flex;
+    align-items: flex-start; /* Asegura que todo quede alineado en la parte superior */
+    gap: 20px; /* Espacio entre filtros y catálogo */
+}
+
+/* Seccion de Filtros */ 
+.filtros {
+    width: 250px; /* Ajusta según necesidad */
+    flex-shrink: 0; /* Evita que los filtros se reduzcan con el catálogo */
+    background: linear-gradient(var(--color-light-text),var(--color-background)); /* Opcional, mejora la visibilidad */
+    padding: 15px;
+    border-radius: 5px; /* Diseño más amigable */
+}
+
+.catalogo {
+    flex-grow: 1; /* Ocupa el resto del espacio disponible */
+}
+
+/* Botones de Pagina */
+.pagination-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background 0.3s ease;
+}
+
+.pagination-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.pagination-button:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+.page-numbers {
+    display: flex;
+    gap: 10px;
+}
+
+.page-numbers button {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.page-numbers button.active {
+    background-color: #007bff;
+    color: white;
+    border: none;
+}
+
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+}
+
+/* Envianos un Correo o llamanos */
+.cta-location {
+    background: radial-gradient(circle,var(--color-text) 30%, var(--color-primary) 70%);
+    color: white;
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.cta-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.end-btn {
+    background-color: var(--color-secondary);
+    color: white; /* Cambia el color del texto a blanco */
+    border: 2px solid white; /* Cambia el borde a blanco */
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); /* Resplandor blanco suave */
+    padding: 12px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: 0.3s ease;
+}
+
+.end-btn:first-child {
+    background-color: var(--color-secondary);
+    color: var(--color-primary);
+    border: 2px solid var(--color-primary);
+}
+
+.end-btn:last-child {
+    background-color: var(--color-secondary);
+    color: var(--color-primary);
+    border: 2px solid var(--color-primary);
+}
+
+.end-btn:hover {
+    background-color: var(--color-background); /* Fondo blanco al hacer hover */
+    color: var(--color-primary); /* Texto con el color principal */
+    border-color: var(--color-primary);
+}
+
+/* Mid Banner */
+.mid-banner {
+    background: radial-gradient(circle, var(--color-text) 30%, var(--color-primary) 70%);
+    color: var(--color-white-smoke);
+    padding: 50px 0;
+    text-align: center;
+}
+
+.mid-banner h3 {
+    font-size: 2.2em;
+    line-height: 1.4;
+}
+
+/* Services Section */
+.section-services {
+    padding: 50px 0;
+    text-align: center;
+    background-color: #f9f9f9;
+}
+
+.section-services h2 {
+    font-size: 2.5em;
+    color: var(--color-text);
+    margin-bottom: 10px;
+}
+
+.section-services .subtitle {
+    font-size: 1.1em;
+    color: var(--color-light-text);
+    margin-bottom: 40px;
+}
+
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    justify-content: center;
+    padding: 0 20px;
+}
+
+.service-card {
+    background-color: #fff;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 30px;
+    text-align: center;
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+}
+
+.service-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.service-card img {
+    max-width: 100%;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.service-card h3 {
+    font-size: 1.5em;
+    color: var(--color-text);
+    margin-bottom: 15px;
+}
+
+/* Contact Section */
+.contact-section {
+    background-color: #f9f9f9;
+    padding: 50px 0;
+    text-align: center;
+}
+
+.contact-section h2 {
+    font-size: 2.5em;
+    color: var(--color-text);
+    margin-bottom: 30px;
+}
+
+.contact-info {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+}
+
+.contact-card {
+    background-color: #fff;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 30px;
+    text-align: center;
+    flex: 1 1 300px;
+    max-width: 350px;
+}
+
+.contact-card .icon {
+    font-size: 3em;
+    color: var(--color-primary);
+    margin-bottom: 15px;
+}
+
+.contact-card h3 {
+    font-size: 1.5em;
+    color: var(--color-text);
+    margin-bottom: 10px;
+}
+
+.contact-card p {
+    color: var(--color-light-text);
+    font-size: 1.1em;
+    margin: 0;
+}
+
+.contact-form-container {
+    background-color: #fff;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 40px;
+    margin-top: 40px;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: left;
+}
+
+.contact-form-container h3 {
+    text-align: center;
+    font-size: 2em;
+    color: var(--color-text);
+    margin-bottom: 25px;
+}
+
+.contact-form .form-group {
+    margin-bottom: 20px;
+}
+
+.contact-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: var(--color-text);
+}
+
+.contact-form input[type="text"],
+.contact-form input[type="email"],
+.contact-form textarea {
+    width: calc(100% - 20px);
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+    font-size: 1em;
+}
+
+.contact-form textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.contact-form button[type="submit"] {
+    background-color: var(--color-primary);
+    color: white;
+    padding: 12px 30px;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: bold;
+    transition: background-color var(--transition-speed);
+    width: auto;
+    display: block;
+    margin-top: 20px;
+}
+
+.contact-form button[type="submit"]:hover {
+    background-color: var(--color-darker-primary);
+}
+
+/* Footer */
+.main-footer {
+    background-color: var(--color-darker-primary);
+    color: var(--color-white-smoke);
+    padding: 40px 0;
+    text-align: center;
+    font-size: 0.9em;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.footer-logo img {
+    max-height: 60px;
+    margin-right: 10px;
+}
+
+.footer-branding {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.footer-tittle {
+    font-weight: bold;
+    font-size: 1.5em;
+}
+
+.footer-links ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.footer-links ul li {
+    margin: 0 15px 10px 15px;
+}
+
+.footer-links ul li a {
+    color: var(--color-white-smoke);
+    text-decoration: none;
+    transition: color var(--transition-speed);
+}
+
+.footer-links ul li a:hover {
+    color: var(--color-primary);
+}
+
+.footer-social {
+    margin-bottom: 20px;
+}
+
+.footer-social a {
+    color: var(--color-white-smoke);
+    font-size: 1.8em;
+    margin: 0 10px;
+    text-decoration: none;
+    transition: color var(--transition-speed);
+}
+
+.footer-social a:hover {
+    color: var(--color-primary);
+}
+
+.footer-bottom {
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 20px;
+    margin-top: 20px;
+    width: 100%;
+}
+
+/* Catálogo Page */
+.catalogo-page {
+    display: flex;
+    gap: 30px;
+    padding: 40px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.sidebar {
+    flex: 0 0 280px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    height: fit-content;
+    position: sticky;
+    top: 100px;
+}
+
+.sidebar h3 {
+    font-size: 1.5em;
+    color: var(--color-text);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.filter-group {
+    margin-bottom: 25px;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: var(--color-text);
+    font-size: 1.1em;
+}
+
+.filter-group input[type="text"] {
+    width: calc(100% - 20px);
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+    font-size: 1em;
+}
+
+.filter-group input[type="checkbox"] {
+    margin-right: 8px;
+    transform: scale(1.1);
+}
+
+.main-content {
+    flex-grow: 1;
+}
+
+.catalogo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.product-card {
+    background-color: #fff;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 20px;
+    text-align: center;
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 400px;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.product-card img {
+    max-width: 100%;
+    height: 180px;
+    object-fit: contain;
+    border-radius: 5px;
+    margin-bottom: 15px;
+}
+
+.product-card h3 {
+    font-weight: bold;
+    color: var(--color-text);
+    margin-bottom: 10px;
+    flex-grow: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.product-card .product-price {
+    color: var(--color-primary);
+    font-size: 1.3em;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.product-card .product-availability {
+    font-size: 0.9em;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+
+.product-card .product-availability.en-existencia {
+    color: green;
+}
+
+.product-card .product-availability.sin-existencia {
+    color: var(--color-red-danger);
+}
+
+.product-card .btn {
+    width: 100%;
+    margin-top: 10px;
+}
+
+
+
+/* Sección de Computadoras Armadas */
+.section-computadoras-armadas {
+    padding: 50px 50px;
+    text-align: center;
+    background-color: #fcfcfc;
+}
+
+.section-computadoras-armadas h2 {
+    font-size: 2.5em;
+    color: var(--color-text);
+    margin-bottom: 50px;
+}
+
+/* Modificaciones para el carrusel de Computadoras Armadas */
+.computadoras-armadas-carousel-container { /* Nuevo contenedor para los botones */
+    position: relative;
+ padding: 20px 40px 0 40px; /* Si ya lo tienes ajustado para la sombra */    margin: 0 auto;
+    max-width: 1400px; /* Asegura que el carrusel no sea más ancho que el diseño */
+}
+
+/* Para navegadores basados en Webkit (Chrome, Safari, nuevo Edge) */
+.computadoras-armadas-grid::-webkit-scrollbar {
+    display: none; /* Oculta completamente la barra de desplazamiento */
+    width: 0; /* Asegura que no ocupe ningún espacio horizontal */
+    height: 0; /* Asegura que no ocupe ningún espacio vertical */
+}
+
+.computadoras-armadas-grid::-webkit-scrollbar-track {
+    background: transparent; /* Hace que el fondo sea transparente */
+}
+
+.computadoras-armadas-grid::-webkit-scrollbar-thumb {
+    background-color: transparent; /* Hace que el "pulgar" sea transparente */
+}
+
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    color: var(--color-white-smoke);
+    border: none;
+    padding: 10px 15px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.5em;
+    z-index: 10;
+    transition: background-color var(--transition-speed);
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.carousel-btn:hover {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.carousel-btn.prev {
+    left: 0;
+}
+
+.carousel-btn.next {
+    right: 0;
+}
+
+.carousel-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* --- Estilos para el Footer --- */
+footer {
+    background-color: var(--color-darker-primary); /* O el color que prefieras de tu paleta */
+    color: var(--color-white-smoke); /* Color del texto */
+    padding: 20px 0; /* Espaciado interno arriba y abajo */
+    text-align: center; /* Centrar el texto */
+    margin-top: 50px; /* Espacio entre el contenido principal y el footer */
+    width: 100%; /* Asegura que ocupe todo el ancho */
+    box-sizing: border-box; /* Para incluir padding y borde en el ancho total */
+}
+
+.footer-content {
+    max-width: 1200px; /* Limita el ancho del contenido interno */
+    margin: 0 auto; /* Centra el contenido */
+    padding: 0 20px; /* Padding a los lados */
+}
+
+.footer-content p {
+    margin: 5px 0; /* Espaciado entre párrafos */
+    font-size: 0.9em;
+}
+
+.footer-admin-link {
+    color: var(--color-button--header); /* Un color que contraste para el enlace */
+    text-decoration: none; /* Quita el subrayado por defecto */
+    font-weight: bold; /* Texto en negrita */
+    transition: color 0.3s ease; /* Transición suave para el hover */
+}
+
+.footer-admin-link:hover {
+    color: var(--color-white-smoke); /* Cambia de color al pasar el mouse */
+    text-decoration: underline; /* Muestra subrayado al pasar el mouse */
+}
+
+/* --- Estilos para el Widget de Chat Flotante --- */
+.chat-container {
+    position: fixed;
+    bottom: 90px; /* Mantenemos la distancia desde abajo */
+    left: 20px; /* CAMBIADO: Ahora está a 20px de la izquierda */
+    right: auto; /* Asegúrate de que no haya conflicto con 'right' si lo dejaste antes */
+    width: 300px;
+    max-height: 400px; /* Altura máxima */
+    background-color: var(--color-white-smoke);
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.chat-header {
+    background-color: var(--color-primary);
+    color: var(--color-white-smoke);
+    padding: 10px;
+    border-top-left-radius: var(--border-radius);
+    border-top-right-radius: var(--border-radius);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.chat-header .toggle-chat {
+    background: none;
+    border: 1px solid var(--color-white-smoke);
+    color: var(--color-white-smoke);
+    font-size: 1.2em;
+    width: 25px;
+    height: 25px;
+    line-height: 1;
+    border-radius: 50%;
+    cursor: pointer;
+    text-align: center;
+}
+
+.chat-body {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(400px - 50px);
+    overflow-y: auto;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+.chat-body{
+    display: none;
+}
+
+.oculto {
+    display: none !important; /* Asegura que el elemento esté completamente oculto por defecto */
+}
+
+.messages {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 5px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-message {
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    border-radius: 15px;
+    max-width: 80%;
+    word-wrap: break-word;
+    font-size: 0.9em;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.user-message {
+    background-color: var(--color-button--header);
+    color: var(--color-darker-primary);
+    align-self: flex-end;
+    border-bottom-right-radius: 2px;
+}
+
+.admin-message {
+    background-color: #e0e0e0;
+    color: var(--color-text);
+    align-self: flex-start;
+    border-bottom-left-radius: 2px;
+}
+
+.message-sender {
+    display: block;
+    font-size: 0.7em;
+    font-weight: bold;
+    margin-bottom: 2px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.admin-message .message-sender {
+    color: #666;
+}
+
+.message-content {
+    display: block;
+}
+
+.message-timestamp {
+    display: block;
+    font-size: 0.6em;
+    text-align: right;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 5px;
+}
+
+.admin-message .message-timestamp {
+    color: #888;
+}
+
+.chat-input-form {
+    display: flex;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.chat-input-form input[type="text"] {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-right: 5px;
+}
+
+.chat-input-form button {
+    background-color: var(--color-primary);
+    color: var(--color-white-smoke);
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.chat-input-form button:hover {
+    background-color: var(--color-darker-primary);
+}
+
+/* Responsive para el chat flotante */
+@media (max-width: 768px) {
+    .chat-container {
+        width: 90%;
+        max-width: 100%;
+        bottom: 70px;
+        right: 5%;
+        left: 5%; /* Esto ya lo centra en móviles */
+    }
+}
+
+        /* Estilos básicos para el chat */
+        .chat-wrapper {
+            position: fixed;
+            bottom: 20px;
+            left: 20px; /* ¡CAMBIA ESTO! Antes era 'right: 20px;' */
+            /* right: 20px; <-- Borra o comenta esta línea si está */
+            width: 350px;
+            height: auto;
+            min-height: 50px;
+            max-height: 80vh;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            z-index: 1000;
+            overflow: hidden;
+        }
+/* El resto de tus estilos del chat no necesitan cambio */
+        .chat-header {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border-top-left-radius: 9px;
+            border-top-right-radius: 9px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        .chat-title {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .toggle-chat {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+        .chat-body {
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 50px); /* Altura dinámica */
+            transition: max-height 0.3s ease-out; /* Transición para ocultar/mostrar */
+            overflow: hidden; /* Importante para el toggle */
+            max-height: 600px; /* Altura máxima por defecto para el cuerpo */
+        }
+        .chat-body{
+            max-height: 0;
+            padding: 0;
+            border: none;
+        }
+        .chat-messages {
+            flex-grow: 1;
+            padding: 10px;
+            overflow-y: auto;
+            border-bottom: 1px solid #eee;
+            background-color: #f9f9f9;
+        }
+        .message-content {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .timestamp {
+            font-size: 0.75em;
+            color: #888;
+            text-align: right; /* Alinea el timestamp a la derecha */
+            display: block;
+        }
+        .user-message {
+            background-color: #e0f7fa; /* Light blue for user */
+            padding: 8px 12px;
+            border-radius: 15px 15px 0 15px; /* Rounded corners, square at bottom-left */
+            margin-bottom: 10px;
+            max-width: 80%;
+            align-self: flex-end; /* Align to right */
+            margin-left: auto; /* Push to right */
+            word-wrap: break-word; /* Wrap long words */
+            text-align: right;
+        }
+        .bot-message {
+            background-color: #e6e6e6; /* Light gray for bot */
+            padding: 8px 12px;
+            border-radius: 15px 15px 15px 0; /* Rounded corners, square at bottom-right */
+            margin-bottom: 10px;
+            max-width: 80%;
+            align-self: flex-start; /* Align to left */
+            margin-right: auto; /* Push to left */
+            word-wrap: break-word; /* Wrap long words */
+            text-align: left;
+        }
+        .chat-input-area {
+            padding: 10px;
+            background-color: #fff;
+            border-top: 1px solid #eee;
+            display: flex;
+            flex-direction: column; /* Cambiado a columna para inputs */
+            gap: 10px; /* Espacio entre elementos */
+        }
+        .chat-input-area textarea,
+        .chat-input-area input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            resize: vertical; /* Permite redimensionar verticalmente el textarea */
+            min-height: 40px;
+            box-sizing: border-box;
+        }
+        .chat-input-area button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            width: 100%; /* El botón ocupa todo el ancho */
+        }
+        .chat-input-area button:hover {
+            background-color: #0056b3;
+        }
+        /* Ocultar input de chat normal e inputs iniciales */
+        #chat-input { display: none; }
+        .initial-input { display: block; } /* Mostrar por defecto los iniciales */
+ 
+        /* --- Estilos para el contenedor de los elementos de autenticación en la cabecera --- */
+.auth-controls {
+    /* Asegúrate de que .header-content tenga 'display: flex;' para que 'margin-left: auto' funcione y empuje los controles a la derecha */
+    margin-left: auto; 
+    
+    display: flex; /* Alinea "Hola, Usuario!" y los botones horizontalmente */
+    align-items: center; /* Centra verticalmente los elementos */
+    gap: 15px; /* Espacio entre los elementos */
+}
+
+/* --- Estilo para el texto "Hola, Usuario!" --- */
+.auth-controls span {
+    color: var(--color-white-smoke); /* Usa tu variable para texto blanco */
+    font-weight: bold;
+    font-family: inherit; /* ¡Hereda la fuente principal de tu página (Arial, sans-serif)! */
+    font-size: 1em; /* Tamaño de fuente estándar */
+}
+
+/* --- Estilos para los botones de autenticación (Iniciar Sesión, Panel Admin, Cerrar Sesión) --- */
+.btn-header-auth {
+    background-color: var(--color-button--header); /* Usa tu color naranja definido para botones de cabecera */
+    color: var(--color-white-smoke); /* ¡Texto en blanco como lo pediste! */
+    padding: 8px 15px;
+    border: none; /* Sin borde */
+    border-radius: var(--border-radius); /* Usa tu variable para bordes redondeados */
+    text-decoration: none; /* Quita el subrayado de los enlaces */
+    font-size: 0.95em; /* Tamaño de fuente ligeramente más grande */
+    cursor: pointer; /* Muestra el cursor de puntero */
+    transition: background-color var(--transition-speed); /* Transición suave de color de fondo */
+    
+    font-family: inherit; /* ¡Asegura que use la misma fuente que el resto de tu página (Arial, sans-serif)! */
+    display: inline-block; /* Asegura que el padding y los márgenes funcionen correctamente */
+    text-align: center; /* Centra el texto dentro del botón */
+}
+
+.btn-header-auth:hover {
+    background-color: #A35E05; /* Un tono de naranja ligeramente más oscuro para el efecto al pasar el ratón, basado en tu `--color-button--header` */
+}
+
+/* --- Confirma que tu .header-content ya tiene estas propiedades (están en tu style.css) --- */
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    width: 100%;
+}
+
+/* --- Estilo para el botón "Regresar a la Página Principal" --- */
+.btn-back-to-home {
+    display: inline-block; /* Permite aplicar padding y otras propiedades de caja */
+    background-color: var(--color-primary); /* Usa tu color azul principal */
+    color: var(--color-white-smoke); /* Texto blanco */
+    padding: 10px 20px;
+    border: none;
+    border-radius: var(--border-radius); /* Usa tu variable para bordes redondeados */
+    text-decoration: none; /* Quita el subrayado del enlace */
+    font-size: 1em; /* Tamaño de fuente estándar */
+    cursor: pointer; /* Muestra el cursor de puntero */
+    transition: background-color var(--transition-speed); /* Transición suave para el hover */
+    font-family: inherit; /* Hereda la fuente principal de tu página */
+    margin-top: 20px; /* Un poco de espacio superior */
+    margin-bottom: 20px; /* Un poco de espacio inferior */
+}
+
+.btn-back-to-home:hover {
+    background-color: var(--color-darker-primary); /* Un tono más oscuro de azul al pasar el ratón */
+}
+
+/* Opcional: estilo general para secciones del dashboard */
+.admin-dashboard-section {
+    background-color: #ffffff;
+    padding: 30px;
+    margin-bottom: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+.admin-dashboard-section h2 {
+    color: var(--color-primary);
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+.admin-dashboard-section .btn-action {
+    display: inline-block;
+    background-color: var(--color-secondary); /* O usa tu --color-tertiary para un verde */
+    color: var(--color-text); /* O blanco si el fondo es muy oscuro */
+    padding: 10px 15px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color var(--transition-speed);
+    margin-top: 10px;
+}
+.admin-dashboard-section .btn-action:hover {
+    background-color: #4FB0B0; /* Un tono más oscuro de --color-secondary */
+}
+/* Asegura que el contenido principal (donde está el botón) se alinee a la izquierda */
+main {
+    text-align: left; /* Esto es clave para alinear elementos inline-block a la izquierda */
+    /* Mantén aquí cualquier otro estilo que ya tengas para tu etiqueta <main> */
+    padding: 20px; /* Si tu main ya tiene un padding, asegúrate de que esté definido */
+}
+
+/* Si ya tienes el estilo para .btn-back-to-admin, puedes asegurarte añadiéndole */
+/* margin-left: 0; para ser explícito, aunque text-align: left; en el padre debería bastar */
+.btn-back-to-admin {
+    /* ... tus estilos existentes para el botón ... */
+    margin-left: 0; /* Asegura que no haya un margen izquierdo no deseado */
+}
