@@ -6,6 +6,19 @@ from django.utils.text import slugify
 from decimal import Decimal
 from django.conf import settings # Asegúrate de que settings esté importado
 
+class ProveedorPrecio(models.Model):
+    producto = models.ForeignKey('Producto', on_delete=models.CASCADE)
+    proveedor = models.CharField(max_length=100)
+    precio = models.DecimalField(max_digits=10, decimal_places=2)
+    stock = models.IntegerField()
+
+    class Meta:
+        unique_together = ('producto', 'proveedor')
+
+    def __str__(self):
+        return f"{self.producto.sku} - {self.proveedor}"
+
+
 # 1. Definición de Categoria
 class Categoria(models.Model):
     nombre = models.CharField(max_length=100, unique=True)

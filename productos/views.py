@@ -21,6 +21,52 @@ from django.urls import reverse
 # --- VISTA PARA LA PÁGINA DE INICIO ---
 def inicio(request):
     return render(request, 'index.html')
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def upload_catalogs_view(request):
+    arroba_form = ExcelUploadForm(prefix='arroba')
+    proce_form = ExcelUploadForm(prefix='proce')
+
+    if request.method == 'POST':
+        if 'arroba-submit' in request.POST:
+            arroba_form = ExcelUploadForm(request.POST, request.FILES, prefix='arroba')
+            if arroba_form.is_valid():
+                archivo = arroba_form.cleaned_data['excel_file']
+                ruta = guardar_archivo_excel(archivo)
+                try:
+                    call_command('actualizar_arroba', file=ruta)
+                    messages.success(request, 'Catálogo de Arroba actualizado correctamente.')
+                except Exception as e:
+                    messages.error(request, f'Error con catálogo Arroba: {e}')
+
+        elif 'proce-submit' in request.POST:
+            proce_form = ExcelUploadForm(request.POST, request.FILES, prefix='proce')
+            if proce_form.is_valid():
+                archivo = proce_form.cleaned_data['excel_file']
+                ruta = guardar_archivo_excel(archivo)
+                try:
+                    call_command('actualizar_proce', file=ruta)
+                    messages.success(request, 'Catálogo de Proce actualizado correctamente.')
+                except Exception as e:
+                    messages.error(request, f'Error con catálogo Proce: {e}')
+
+    context = {
+        'arroba_form': arroba_form,
+        'proce_form': proce_form,
+    }
+    return render(request, 'productos/upload_catalogs.html', context)
+
+
+def guardar_archivo_excel(excel_file):
+    file_path = os.path.join(settings.MEDIA_ROOT, 'excel_files', excel_file.name)
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    with open(file_path, 'wb+') as destination:
+        for chunk in excel_file.chunks():
+            destination.write(chunk)
+    return file_path
+
+
 # --- VISTA PARA LA PÁGINA DE CARGA DE ARCHIVO EXCEL ---
 @login_required
 @user_passes_test(lambda u: u.is_staff)

@@ -1,0 +1,33 @@
+{% load static %}
+
+{% block content %}
+<h2>Subir catálogos de proveedores</h2>
+
+<div class="form-container">
+  <h3>Catálogo ARROBA</h3>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ arroba_form.as_p }}
+    <button type="submit" name="arroba-submit" class="btn btn-primary">Subir Arroba</button>
+  </form>
+</div>
+
+<hr>
+
+<div class="form-container">
+  <h3>Catálogo PROCE</h3>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ proce_form.as_p }}
+    <button type="submit" name="proce-submit" class="btn btn-success">Subir Proce</button>
+  </form>
+</div>
+
+{% if messages %}
+  <ul class="messages">
+    {% for message in messages %}
+      <li class="{{ message.tags }}">{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+{% endblock %}

@@ -19,8 +19,9 @@
             <ul>
                 <li><a href="{% url 'productos:index' %}">Inicio</a></li>
                 <li><a href="{% url 'productos:admin_dashboard' %}">Dashboard</a></li>
-                <li><a href="{% url 'productos:upload_excel_page' %}">Subir Catálogo</a></li>
-                <li><a href="{% url 'productos:admin_chat_panel' %}">Chat Admin</a></li>
+                <li><a href="{% url 'productos:upload_catalogs' %}">Subir Catálogos de Proveedores</a></li>
+                <!-- <li><a href="{% url 'productos:admin_chat_panel' %}">Chat Admin</a></li> -->
+
             </ul>
         </nav>
         <div class="auth-controls">
@@ -42,7 +43,7 @@
         <section class="admin-dashboard-section">
             <h2>Gestión de Productos</h2>
             <p>Aquí puedes gestionar tus productos, ver estadísticas, etc.</p>
-            <a href="{% url 'productos:upload_excel_page' %}" class="btn-action">Subir/Actualizar Catálogo (Excel)</a>
+            <a href="{% url 'productos:upload_catalogs' %}" class="btn-action">Subir/Actualizar Catálogo (Excel)</a>
             
             {# AÑADE ESTE NUEVO ENLACE AQUÍ #}
             <a href="/admin/productos/producto/add/" class="btn-action" style="background-color: var(--color-tertiary);">Añadir Nuevo Producto (Manual)</a>
