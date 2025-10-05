@@ -3,7 +3,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from .models import Producto, Conversation, ChatMessage
+from django.db.models import F, DecimalField, ExpressionWrapper, Case, When
+from .models import Producto, Conversation, ChatMessage, ProveedorPrecio, ConfiguracionGlobal
 import pandas as pd
 from django.core.management import call_command
 import os
@@ -16,37 +17,76 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.sessions.models import Session
 import json
 from django.utils import timezone
-from .forms import ExcelUploadForm, CatalogoProveedorForm
+from .forms import ExcelUploadForm
 from django.urls import reverse
-from .management.commands.actualizar_arroba import procesar_excel_catalogo
-# --- VISTA PARA SUBIR CATÁLOGO DE PROVEEDOR ---
-@login_required
-def subir_catalogo_dashboard(request):
-    if request.method == 'POST' and request.FILES.get('archivo'):
-        archivo = request.FILES['archivo']
-        try:
-            procesar_excel_catalogo(archivo)  # Tu lógica para actualizar productos
-            messages.success(request, 'Catálogo actualizado correctamente.')
-        except Exception as e:
-            messages.error(request, f'Error al procesar el archivo: {e}')
-        return redirect('productos:admin_dashboard')  # Redirige al panel después de subir
-    return redirect('productos:admin_dashboard')
+from core.utils import get_tasa_dolar
 
-def subir_catalogo(request):
-    if request.method == 'POST':
-        form = CatalogoProveedorForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Catálogo subido exitosamente.')
-            return redirect('productos:subir_catalogo')
-        else:
-            messages.error(request, 'Error al subir el catálogo. Por favor, revisa el formulario.')
-    else:
-        form = CatalogoProveedorForm()
-    return render(request, 'productos/subir_catalogo.html', {'form': form})
+tasa = get_tasa_dolar()
+
+
+
 # --- VISTA PARA LA PÁGINA DE INICIO ---
 def inicio(request):
     return render(request, 'index.html')
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def upload_catalogs_view(request):
+    arroba_form = ExcelUploadForm(prefix='arroba')
+    proce_form = ExcelUploadForm(prefix='proce')
+    techsmart_form = ExcelUploadForm(prefix='techsmart')  # ✅ reutilizamos el mismo form, ya que solo valida archivo
+
+    if request.method == 'POST':
+        if 'arroba-submit' in request.POST:
+            arroba_form = ExcelUploadForm(request.POST, request.FILES, prefix='arroba')
+            if arroba_form.is_valid():
+                archivo = arroba_form.cleaned_data['excel_file']
+                ruta = guardar_archivo_excel(archivo)
+                try:
+                    call_command('actualizar_arroba', file=ruta)
+                    messages.success(request, 'Catálogo de Arroba actualizado correctamente.')
+                except Exception as e:
+                    messages.error(request, f'Error con catálogo Arroba: {e}')
+
+        elif 'proce-submit' in request.POST:
+            proce_form = ExcelUploadForm(request.POST, request.FILES, prefix='proce')
+            if proce_form.is_valid():
+                archivo = proce_form.cleaned_data['excel_file']
+                ruta = guardar_archivo_excel(archivo)
+                try:
+                    call_command('actualizar_proce', file=ruta)
+                    messages.success(request, 'Catálogo de Proce actualizado correctamente.')
+                except Exception as e:
+                    messages.error(request, f'Error con catálogo Proce: {e}')
+
+        elif 'techsmart-submit' in request.POST:
+            techsmart_form = ExcelUploadForm(request.POST, request.FILES, prefix='techsmart')
+            if techsmart_form.is_valid():
+                archivo = techsmart_form.cleaned_data['excel_file']
+                ruta = guardar_archivo_excel(archivo)
+                try:
+                    call_command('actualizar_techsmart', file=ruta)
+                    messages.success(request, 'Catálogo de Techsmart (PDF) procesado correctamente.')
+                except Exception as e:
+                    messages.error(request, f'Error con catálogo Techsmart: {e}')
+
+    context = {
+        'arroba_form': arroba_form,
+        'proce_form': proce_form,
+        'techsmart_form': techsmart_form,
+    }
+    return render(request, 'productos/upload_catalogs.html', context)
+
+
+def guardar_archivo_excel(excel_file):
+    file_path = os.path.join(settings.MEDIA_ROOT, 'excel_files', excel_file.name)
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    with open(file_path, 'wb+') as destination:
+        for chunk in excel_file.chunks():
+            destination.write(chunk)
+    return file_path
+
+
 # --- VISTA PARA LA PÁGINA DE CARGA DE ARCHIVO EXCEL ---
 @login_required
 @user_passes_test(lambda u: u.is_staff)
@@ -97,11 +137,39 @@ def admin_dashboard_view(request):
 
 # Esta vista renderiza tu plantilla HTML (ej. para la página principal de productos)
 def index(request):
-    productos = Producto.objects.filter(activo=True).order_by('nombre')
-    context = {
-        'productos': productos
-    }
-    return render(request, 'productos/index.html', context)
+    productos = Producto.objects.all()
+    tasa_cambio = get_tasa_dolar()
+
+
+    productos_con_precios = []
+    for producto in productos:
+        proveedores = (producto.proveedorprecio_set
+            .annotate(
+                precio_mxn=Case(
+                    When(moneda='USD', then=ExpressionWrapper(F('precio') * tasa_cambio, output_field=DecimalField())),
+                    default=F('precio'),
+                    output_field=DecimalField()
+                )
+            )
+        )
+
+        if request.user.is_authenticated and request.user.is_staff:
+            # Admin: todos los proveedores
+            precios = proveedores.values('proveedor__nombre', 'precio', 'moneda', 'stock')
+            productos_con_precios.append({
+                'producto': producto,
+                'precios': precios
+            })
+        else:
+            # Visitante: solo el menor precio convertido a MXN
+            mejor = proveedores.order_by('precio_mxn').first()
+            productos_con_precios.append({
+                'producto': producto,
+                'precio_mas_bajo': mejor.precio_mxn if mejor else None,
+                'moneda': 'MXN'
+            })
+
+    return render(request, 'productos/index.html', {'productos_con_precios': productos_con_precios})
 
 # Tu vista de la API (si usas Django REST Framework)
 class ProductoAPIView(generics.ListAPIView):

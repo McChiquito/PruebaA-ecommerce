@@ -1,11 +1,9 @@
 # productos/forms.py
 from django import forms
-from .models import CatalogoProveedor
 
 class ExcelUploadForm(forms.Form):
-    excel_file = forms.FileField(label='Selecciona tu archivo Excel (.xlsx)')
-
-class CatalogoProveedorForm(forms.ModelForm):
-    class Meta:
-        model = CatalogoProveedor
-        fields = ['archivo']
+    excel_file = forms.FileField(
+        label='Archivo',
+        required=True,
+        widget=forms.FileInput(attrs={'accept': '.xlsx,.xls,.pdf'})  # ✅ aquí permites PDF también
+    )

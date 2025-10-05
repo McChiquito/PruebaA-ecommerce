@@ -18,19 +18,3 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('✅ Actualización finalizada sin errores críticos.'))
         except Exception as e:
             self.stdout.write(self.style.ERROR(f'❌ Error al ejecutar: {e}'))
-def procesar_excel_catalogo(archivo):
-    # tu lógica que antes estaba en handle(self, *args, **kwargs)
-    # por ejemplo, procesar el archivo Excel, actualizar productos, etc.
-    import openpyxl
-    from productos.models import Producto, ConfiguracionGlobal
-
-    wb = openpyxl.load_workbook(archivo)
-    hoja = wb.active
-
-    for fila in hoja.iter_rows(min_row=2, values_only=True):
-        sku, stock, precio = fila[0], fila[1], fila[2]
-        producto = Producto.objects.filter(codigo=sku).first()
-        if producto:
-            producto.stock = stock
-            producto.precio_usd = precio
-            producto.save()

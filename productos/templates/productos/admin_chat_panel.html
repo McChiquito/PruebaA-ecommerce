@@ -189,7 +189,7 @@
         <div class="conversations-list">
             <h2>Conversaciones</h2>
             {% for convo in conversations %}
-                <!-- <a href="{% url 'productos:admin_chat_panel_detail' convo.id %}" 
+                <a href="{% url 'productos:admin_chat_panel_detail' convo.id %}" 
                    class="conversation-item {% if convo.id == current_conversation.id %}active{% endif %}">
                     <div>
                         {% if convo.user %}

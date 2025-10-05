@@ -171,23 +171,35 @@
 
         <div class="product-list">
             {% if productos %}
-                {% for producto in productos %}
-                    <div class="product-item">
-                        {% if producto.imagen %}
-                            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}">
+                {% for item in productos_con_precios %}
+                <div class="product-item">
+                    {% if item.producto.imagen %}
+                        <img src="{{ item.producto.imagen.url }}" alt="{{ item.producto.nombre }}">
+                    {% else %}
+                        <img src="{% static 'img/placeholder.png' %}" alt="Imagen no disponible">
+                    {% endif %}
+                    <h3>{{ item.producto.nombre }}</h3>
+                    <p>SKU: {{ item.producto.sku }}</p>
+                    {% if item.producto.categoria %}
+                        <p>Categoría: {{ item.producto.categoria.nombre }}</p>
+                    {% endif %}
+
+                    {% if item.precios %}
+                        {% if item.precios|length > 1 %}
+                            <ul>
+                                {% for precio in item.precios %}
+                                    <li>{{ precio.proveedor__nombre }}: ${{ precio.precio_mxn }} ({{ precio.stock }} disponibles)</li>
+                                {% endfor %}
+                            </ul>
                         {% else %}
-                            <img src="{% static 'img/placeholder.png' %}" alt="Imagen no disponible"> {# O alguna imagen por defecto #}
+                            <p class="price">MXN ${{ item.precios.0.precio_mxn }} (Proveedor: {{ item.precios.0.proveedor__nombre }})</p>
                         {% endif %}
-                        <h3>{{ producto.nombre }}</h3>
-                        <p>SKU: {{ producto.sku }}</p>
-                        {% if producto.categoria %}
-                            <p>Categoría: {{ producto.categoria.nombre }}</p>
-                        {% endif %}
-                        <p class="price">MXN ${{ producto.precio_mxn|floatformat:2 }}</p>
-                        <p>{{ producto.descripcion|truncatechars:100 }}</p>
-                        {# Puedes añadir más detalles aquí, como stock, proveedor, etc. #}
-                    </div>
+                    {% else %}
+                        <p class="price">No disponible</p>
+                    {% endif %}
+                </div>
                 {% endfor %}
+
             {% else %}
                 <p class="no-products">No hay productos disponibles en este momento.</p>
             {% endif %}

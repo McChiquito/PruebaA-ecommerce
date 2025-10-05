@@ -7,7 +7,9 @@ from .models import Producto, Conversation, Categoria,Proveedor,TipoCambio, Chat
 admin.site.register(Proveedor)
 admin.site.register(TipoCambio)
 
-admin.site.register(ConfiguracionGlobal)
+@admin.register(ConfiguracionGlobal)
+class ConfiguracionGlobalAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'valor')
 @admin.register(Categoria)
 class CategoriaAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'slug')

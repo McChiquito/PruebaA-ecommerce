@@ -6,12 +6,34 @@ from django.utils.text import slugify
 from decimal import Decimal
 from django.conf import settings # Asegúrate de que settings esté importado
 
-class CatalogoProveedor(models.Model):
-    archivo = models.FileField(upload_to='catalogos/')
-    fecha_subida = models.DateTimeField(auto_now_add=True)
+@property
+def precio_mxn(self):
+    if self.moneda == 'USD':
+        tasa = ConfiguracionGlobal.objects.first().tasa_cambio_usd_mxn
+        return round(self.precio * tasa, 2)
+    return self.precio
+class ProveedorPrecio(models.Model):
+    producto = models.ForeignKey('Producto', on_delete=models.CASCADE)
+    proveedor = models.ForeignKey('Proveedor', on_delete=models.CASCADE)
+    precio = models.DecimalField(max_digits=10, decimal_places=2)
+    stock = models.IntegerField()
+    moneda = models.CharField(max_length=10, default='MXN')  # o USD
 
     def __str__(self):
-        return f"Catálogo subido el {self.fecha_subida.strftime('%d-%m-%Y %H:%M')}"
+        return f"{self.producto.sku} - {self.proveedor}"
+
+    @property
+    def precio_mxn(self):
+        from .models import ConfiguracionGlobal
+        tasa = ConfiguracionGlobal.objects.first().tasa_cambio_usd_mxn
+        return round(self.precio * tasa, 2) if self.moneda == 'USD' else self.precio
+
+    class Meta:
+        unique_together = ('producto', 'proveedor')
+
+    def __str__(self):
+        return f"{self.producto.sku} - {self.proveedor}"
+
 
 # 1. Definición de Categoria
 class Categoria(models.Model):
@@ -31,10 +53,11 @@ class Categoria(models.Model):
         verbose_name_plural = "Categorías"
 # productos/models.py
 class ConfiguracionGlobal(models.Model):
-    tasa_cambio_usd_mxn = models.DecimalField(max_digits=10, decimal_places=2, default=17.0)
+    nombre = models.CharField(max_length=100)
+    valor = models.FloatField()
 
     def __str__(self):
-        return f"Tasa actual: {self.tasa_cambio_usd_mxn}"
+        return f"{self.nombre}: {self.valor}"
 
     class Meta:
         verbose_name = "Configuración Global"
