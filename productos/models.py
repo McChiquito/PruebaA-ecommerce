@@ -70,6 +70,7 @@ class ConfiguracionGlobal(models.Model):
 # 4️⃣  PRODUCTOS
 # ==========================================================
 class Producto(models.Model):
+    nombre = models.CharField(max_length=255, blank=True, null=True)  # <— NUEVO
     sku = models.CharField(max_length=100, unique=True)
     descripcion = models.TextField(blank=True, null=True)
     precio = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
@@ -88,7 +89,11 @@ class Producto(models.Model):
 
     def __str__(self):
         return f"{self.sku} - {self.descripcion}"
-
+    
+    @property
+    def display_name(self):
+        # útil si quieres exponerlo en el API
+        return self.nombre or self.descripcion or self.sku
     @property
     def precio_mxn(self):
         """
