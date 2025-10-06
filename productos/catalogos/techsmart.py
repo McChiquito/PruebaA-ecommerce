@@ -1,54 +1,61 @@
 import os
 import re
-from PyPDF2 import PdfReader
-from productos.models import Producto, Proveedor, ProveedorPrecio
-from core.utils import convertir_a_mxn, get_tasa_dolar
+import pdfplumber
+from productos.models import Producto, ProveedorPrecio
 
-def procesar_catalogo_techsmart(ruta_archivo):
-    print("📥 Procesando catálogo Techsmart:", ruta_archivo)
+
+def procesar_catalogo_techsmart(ruta_archivo, proveedor):
+    print(f"📥 Procesando catálogo Techsmart: {ruta_archivo}")
+    print(f"🔄 Configuración actual → Tasa: {proveedor.tasa_cambio_usd_mxn} | IVA: {proveedor.porcentaje_iva}% | Incluye IVA: {proveedor.incluye_iva}")
 
     if not os.path.exists(ruta_archivo):
         print(f"❌ El archivo {ruta_archivo} no existe.")
         return
 
-    reader = PdfReader(ruta_archivo)
-    proveedor, _ = Proveedor.objects.get_or_create(nombre="Techsmart")
-    tasa_dolar = get_tasa_dolar()
+    productos_actualizados = 0
 
-    for page in reader.pages:
-        text = page.extract_text()
-        if not text:
-            continue
+    with pdfplumber.open(ruta_archivo) as pdf:
+        for pagina in pdf.pages:
+            texto = pagina.extract_text()
+            if not texto:
+                continue
 
-        lines = text.split("\n")
-        for line in lines:
-            match = re.search(
-                r'(?P<sku>[A-Z0-9\-]+)\s+(?P<nombre>.*?)\s+(?P<precio>\d+(?:,\d{3})*\.\d{2})\s+(?P<moneda>USD|MXN)',
-                line
-            )
+            for linea in texto.split("\n"):
+                match = re.search(r"(?P<sku>[A-Z0-9\-]+).*?\$\s*(?P<precio>\d+(?:\.\d+)?).*?(?P<moneda>USD|MXN)", linea)
+                if not match:
+                    continue
 
-            if match:
-                sku = match.group('sku')
-                precio = float(match.group('precio').replace(',', ''))
-                moneda = match.group('moneda')
+                sku = match.group("sku").strip()
+                precio = float(match.group("precio"))
+                moneda = match.group("moneda").strip()
 
                 try:
                     producto = Producto.objects.get(sku=sku)
                 except Producto.DoesNotExist:
+                    print(f"⚠️ SKU no encontrado en base: {sku}")
                     continue
 
+                # Conversión de moneda
                 if moneda == "USD":
-                    precio = convertir_a_mxn(precio, tasa_dolar)
+                    precio_mxn = precio * proveedor.tasa_cambio_usd_mxn
+                else:
+                    precio_mxn = precio
+
+                # Aplicar IVA si no está incluido
+                if not proveedor.incluye_iva:
+                    precio_mxn *= (1 + proveedor.porcentaje_iva / 100)
 
                 ProveedorPrecio.objects.update_or_create(
                     producto=producto,
                     proveedor=proveedor,
                     defaults={
-                        'precio': precio,
-                        'stock': 5,  # ajusta si tienes lógica real
-                        'moneda': 'MXN'
-                    }
+                        "precio": round(precio_mxn, 2),
+                        "moneda": "MXN",
+                        "stock": 5,
+                    },
                 )
-                print(f"✅ SKU {sku} actualizado.")
-    
-    print("✅ Catálogo Techsmart procesado.")
+
+                productos_actualizados += 1
+                print(f"✅ {sku} → ${round(precio_mxn, 2)} MXN (IVA {'incluido' if proveedor.incluye_iva else 'aplicado'})")
+
+    print(f"✅ Catálogo Techsmart procesado correctamente ({productos_actualizados} productos actualizados).")

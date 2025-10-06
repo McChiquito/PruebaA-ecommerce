@@ -9,6 +9,7 @@ import pandas as pd
 from django.core.management import call_command
 import os
 from django.conf import settings
+from django.http import JsonResponse
 from rest_framework import generics
 from .serializers import ProductoSerializer
 from django.views.decorators.http import require_POST
@@ -58,7 +59,7 @@ def admin_dashboard(request):
         'form_techsmart': form_techsmart,
     }
 
-    return render(request, 'admin_dashboard.html', context)
+    return render(request, 'productos/admin_dashboard.html')
   
 def vista_catalogo(request):
     # Obtener todos los productos
@@ -82,56 +83,79 @@ def vista_catalogo(request):
 
 # --- VISTA PARA LA PÁGINA DE INICIO ---
 def inicio(request):
-    return render(request, 'index.html')
+    return render(request, 'productos/index.html')
+
 
 @login_required
 @user_passes_test(lambda u: u.is_staff)
 def upload_catalogs_view(request):
-    arroba_form = ExcelUploadForm(prefix='arroba')
-    proce_form = ExcelUploadForm(prefix='proce')
-    techsmart_form = ExcelUploadForm(prefix='techsmart')  # ✅ reutilizamos el mismo form, ya que solo valida archivo
-
+    """
+    Procesa la carga de catálogos desde el dashboard de administración.
+    """
     if request.method == 'POST':
-        if 'arroba-submit' in request.POST:
-            arroba_form = ExcelUploadForm(request.POST, request.FILES, prefix='arroba')
-            if arroba_form.is_valid():
-                archivo = arroba_form.cleaned_data['excel_file']
-                ruta = guardar_archivo_excel(archivo)
+        archivos = request.FILES
+        base_path = os.path.join(settings.MEDIA_ROOT, 'catalogos_subidos')
+        os.makedirs(base_path, exist_ok=True)
+
+        from productos.models import Proveedor
+
+        # --- Catálogo Arroba ---
+        if 'catalogo_arroba' in archivos:
+            archivo = archivos['catalogo_arroba']
+            ruta = os.path.join(base_path, archivo.name)
+            with open(ruta, 'wb+') as dest:
+                for chunk in archivo.chunks():
+                    dest.write(chunk)
+
+            proveedor = Proveedor.objects.filter(nombre__iexact="Arroba").first()
+            if not proveedor:
+                messages.error(request, "⚠️ No se encontró el proveedor 'Arroba'.")
+            else:
                 try:
-                    call_command('actualizar_arroba', file=ruta)
-                    messages.success(request, 'Catálogo de Arroba actualizado correctamente.')
+                    procesar_catalogo_arroba(ruta, proveedor)
+                    messages.success(request, f'✅ Catálogo de Arroba procesado correctamente.')
                 except Exception as e:
-                    messages.error(request, f'Error con catálogo Arroba: {e}')
+                    messages.error(request, f'❌ Error procesando catálogo de Arroba: {e}')
 
-        elif 'proce-submit' in request.POST:
-            proce_form = ExcelUploadForm(request.POST, request.FILES, prefix='proce')
-            if proce_form.is_valid():
-                archivo = proce_form.cleaned_data['excel_file']
-                ruta = guardar_archivo_excel(archivo)
+        # --- Catálogo Proce ---
+        if 'catalogo_proce' in archivos:
+            archivo = archivos['catalogo_proce']
+            ruta = os.path.join(base_path, archivo.name)
+            with open(ruta, 'wb+') as dest:
+                for chunk in archivo.chunks():
+                    dest.write(chunk)
+
+            proveedor = Proveedor.objects.filter(nombre__iexact="Proce").first()
+            if not proveedor:
+                messages.error(request, "⚠️ No se encontró el proveedor 'Proce'.")
+            else:
                 try:
-                    call_command('actualizar_proce', file=ruta)
-                    messages.success(request, 'Catálogo de Proce actualizado correctamente.')
+                    procesar_catalogo_proce(ruta, proveedor)
+                    messages.success(request, f'✅ Catálogo de Proce procesado correctamente.')
                 except Exception as e:
-                    messages.error(request, f'Error con catálogo Proce: {e}')
+                    messages.error(request, f'❌ Error procesando catálogo de Proce: {e}')
 
-        elif 'techsmart-submit' in request.POST:
-            techsmart_form = ExcelUploadForm(request.POST, request.FILES, prefix='techsmart')
-            if techsmart_form.is_valid():
-                archivo = techsmart_form.cleaned_data['excel_file']
-                ruta = guardar_archivo_excel(archivo)
+        # --- Catálogo Techsmart ---
+        if 'catalogo_techsmart' in archivos:
+            archivo = archivos['catalogo_techsmart']
+            ruta = os.path.join(base_path, archivo.name)
+            with open(ruta, 'wb+') as dest:
+                for chunk in archivo.chunks():
+                    dest.write(chunk)
+
+            proveedor = Proveedor.objects.filter(nombre__iexact="Techsmart").first()
+            if not proveedor:
+                messages.error(request, "⚠️ No se encontró el proveedor 'Techsmart'.")
+            else:
                 try:
-                    call_command('actualizar_techsmart', file=ruta)
-                    messages.success(request, 'Catálogo de Techsmart (PDF) procesado correctamente.')
+                    procesar_catalogo_techsmart(ruta, proveedor)
+                    messages.success(request, f'✅ Catálogo de Techsmart procesado correctamente.')
                 except Exception as e:
-                    messages.error(request, f'Error con catálogo Techsmart: {e}')
+                    messages.error(request, f'❌ Error procesando catálogo de Techsmart: {e}')
 
-    context = {
-        'arroba_form': arroba_form,
-        'proce_form': proce_form,
-        'techsmart_form': techsmart_form,
-    }
-    return render(request, 'productos/upload_catalogs.html', context)
+        return redirect('productos:admin_dashboard')
 
+    return render(request, 'productos/admin_dashboard.html')
 
 def guardar_archivo_excel(excel_file):
     file_path = os.path.join(settings.MEDIA_ROOT, 'excel_files', excel_file.name)
@@ -189,38 +213,70 @@ def upload_excel_view(request):
 def admin_dashboard_view(request):
     return render(request, 'productos/admin_dashboard.html')
 
+def catalogo_view(request):
+    productos = Producto.objects.all().prefetch_related('precioproveedor_set', 'categoria')
+    productos_con_precios = []
 
+    for producto in productos:
+        precios = (
+            ProveedorPrecio.objects
+            .filter(producto=producto)
+            .values('proveedor__nombre', 'precio_mxn', 'stock')
+        )
+        productos_con_precios.append({
+            'producto': producto,
+            'precios': precios
+        })
+
+    context = {'productos_con_precios': productos_con_precios}
+    return render(request, 'index.html', context)
 # Esta vista renderiza tu plantilla HTML (ej. para la página principal de productos)
+# --- VISTA PARA LA PÁGINA PRINCIPAL DE PRODUCTOS ---
 def index(request):
+    from productos.models import Producto, ProveedorPrecio
+    from core.utils import get_tasa_dolar
+
     productos = Producto.objects.all()
     tasa_cambio = get_tasa_dolar()
 
-
     productos_con_precios = []
-    for producto in productos:
-        proveedores = (producto.proveedorprecio_set
-            .annotate(
-                precio_mxn=Case(
-                    When(moneda='USD', then=ExpressionWrapper(F('precio') * tasa_cambio, output_field=DecimalField())),
-                    default=F('precio'),
-                    output_field=DecimalField()
-                )
-            )
-        )
 
+    for producto in productos:
+        # Obtener todos los precios de los proveedores asociados
+        precios_proveedores = ProveedorPrecio.objects.filter(producto=producto).select_related('proveedor')
+
+        precios_convertidos = []
+        for p in precios_proveedores:
+            tasa = p.proveedor.tasa_cambio_usd_mxn or tasa_cambio
+            precio_final = p.precio
+
+            # Si la moneda es USD, convertir a MXN
+            if p.moneda == 'USD':
+                precio_final *= tasa
+
+            # Si el proveedor NO incluye IVA, aplicar el IVA correspondiente
+            if not p.proveedor.incluye_iva:
+                precio_final *= (1 + (p.proveedor.porcentaje_iva / 100))
+
+            precios_convertidos.append({
+                'proveedor': p.proveedor.nombre,
+                'precio_final': round(precio_final, 2),
+                'stock': p.stock,
+                'moneda': 'MXN'
+            })
+
+        # Mostrar información dependiendo del tipo de usuario
         if request.user.is_authenticated and request.user.is_staff:
-            # Admin: todos los proveedores
-            precios = proveedores.values('proveedor__nombre', 'precio', 'moneda', 'stock')
             productos_con_precios.append({
                 'producto': producto,
-                'precios': precios
+                'precios': precios_convertidos
             })
         else:
-            # Visitante: solo el menor precio convertido a MXN
-            mejor = proveedores.order_by('precio_mxn').first()
+            # Mostrar el menor precio
+            mejor_precio = min([p['precio_final'] for p in precios_convertidos], default=None)
             productos_con_precios.append({
                 'producto': producto,
-                'precio_mas_bajo': mejor.precio_mxn if mejor else None,
+                'precio_mas_bajo': mejor_precio,
                 'moneda': 'MXN'
             })
 
@@ -249,6 +305,25 @@ def admin_chat_panel(request, conversation_id=None):
         'chat_messages': chat_messages
     }
     return render(request, 'productos/admin_chat_panel.html', context)
+
+def vista_principal(request):
+    productos = Producto.objects.all().prefetch_related("preciosproveedor_set", "categoria")
+
+    productos_con_precios = []
+    for producto in productos:
+        precios = (
+            ProveedorPrecio.objects.filter(producto=producto)
+            .values("proveedor__nombre", "precio_mxn", "stock")
+        )
+        productos_con_precios.append({
+            "producto": producto,
+            "precios": list(precios)
+        })
+
+    context = {
+        "productos_con_precios": productos_con_precios
+    }
+    return render(request, "index.html", context)
 
 @csrf_exempt
 @require_POST
@@ -308,3 +383,100 @@ def close_conversation_api(request, conversation_id):
         return JsonResponse({'status': 'success', 'message': f'Conversación {conversation_id} cerrada.'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+# ==========================================================
+# API: Productos en formato JSON (para el catálogo principal)
+# ==========================================================
+
+def api_productos(request):
+    productos = Producto.objects.all()
+    data = []
+
+    for p in productos:
+        # Obtener los precios por proveedor
+        precios_proveedor = []
+        precios = ProveedorPrecio.objects.filter(producto=p)
+        for pp in precios:
+            precios_proveedor.append({
+                "proveedor": pp.proveedor.nombre,
+                "precio": float(pp.precio) if pp.precio else None,
+                "stock": pp.stock if pp.stock is not None else 0,
+            })
+
+        # Calcular el precio mínimo (por si quieres mostrar el más barato)
+        precio_min = min(
+            [pp["precio"] for pp in precios_proveedor if pp["precio"] is not None],
+            default=None
+        )
+
+        data.append({
+            "id": p.id,
+            "sku": p.sku,
+            "nombre": getattr(p, "descripcion", "Sin nombre"),
+            "descripcion": getattr(p, "descripcion", ""),
+            "categoria_nombre": p.categoria.nombre if hasattr(p, "categoria") and p.categoria else "Sin categoría",
+            "imagen": p.imagen.url if hasattr(p, "imagen") and p.imagen else "",
+            "inventario": getattr(p, "inventario", 0),
+            "garantia": getattr(p, "garantia", None),
+            "precios_proveedor": precios_proveedor,  # 🔥 aquí van los detalles
+            "precio_minimo": precio_min,  # 🔥 precio más barato
+        })
+
+    return JsonResponse(data, safe=False)
+    productos = Producto.objects.all()
+    data = []
+
+    for p in productos:
+        data.append({
+            'id': p.id,
+            'sku': p.sku,
+            'nombre': getattr(p, 'descripcion', 'Sin nombre'),  # ✅ corregido
+            'descripcion': getattr(p, 'descripcion', ''),
+            'precio_mxn': float(p.precio_mxn) if hasattr(p, 'precio_mxn') else 0,
+            'categoria_nombre': p.categoria.nombre if hasattr(p, 'categoria') and p.categoria else 'Sin categoría',
+            'imagen': p.imagen.url if hasattr(p, 'imagen') and p.imagen else '',
+            'inventario': getattr(p, 'inventario', 0),
+            'garantia_meses': getattr(p, 'garantia', None),
+        })
+
+    return JsonResponse(data, safe=False)
+
+    productos = Producto.objects.all().prefetch_related("proveedorprecio_set")
+
+    data = []
+    for producto in productos:
+        precios = []
+        for precio in producto.proveedorprecio_set.all():
+            precios.append({
+                "proveedor": precio.proveedor.nombre,
+                "precio": round(precio.precio, 2),
+                "stock": precio.stock,
+            })
+
+        data.append({
+            "sku": producto.sku,
+            "descripcion": producto.descripcion,
+            "garantia": producto.garantia,
+            "condicion": producto.condicion,
+            "categoria": producto.categoria.nombre if producto.categoria else "",
+            "precios": precios,
+        })
+
+    return JsonResponse({"productos": data})
+    productos = Producto.objects.select_related('categoria').all()
+
+    data = []
+    for p in productos:
+        data.append({
+            "id": p.id,
+            "sku": p.sku,
+            "nombre": p.nombre,
+            "descripcion": p.descripcion,
+            "categoria_nombre": p.categoria.nombre if p.categoria else "",
+            "precio_mxn": p.precio_dolar,  # o p.precio_mxn si lo tienes
+            "inventario": p.stock,  # o el campo que uses
+            "imagen": p.imagen.url if p.imagen else "",
+            "garantia": p.garantia,
+        })
+
+    return JsonResponse(data, safe=False)

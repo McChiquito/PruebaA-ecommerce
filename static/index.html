@@ -7,7 +7,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>VICVAR COMPUTERS</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <script src="{% static 'js/catalogo.js' %}"></script>
     <img src="{% static 'img/logo_vicvar_computer.png' %}" alt="Logo">
     <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
 </head>
@@ -165,71 +164,35 @@
         </div>
     </div>
 </section>
+<!-- 🔄 Loader mientras se cargan los productos -->
+<div id="loader" style="
+    display: none;
+    text-align: center;
+    margin: 40px 0;
+    font-size: 18px;
+    color: #00467F;
+">
+    <p><strong>Cargando productos...</strong></p>
+</div>
 
-    <main style="padding: 20px;">
-        <h1>Nuestros Productos</h1>
+<main id="productos-dinamicos" style="padding: 20px;">
+    <h1>Nuestros Productos</h1>
+    <div id="catalogo-grid" class="product-list"></div>
+    <p id="mensaje-vacio" class="no-products" style="display: none;">No hay productos disponibles en este momento.</p>
+</main>
 
-        <div class="product-list">
-            {% if productos %}
-                {% for item in productos_con_precios %}
-                <div class="product-item">
-                    {% if item.producto.imagen %}
-                        <img src="{{ item.producto.imagen.url }}" alt="{{ item.producto.nombre }}">
-                    {% else %}
-                        <img src="{% static 'img/placeholder.png' %}" alt="Imagen no disponible">
-                    {% endif %}
-                    <h3>{{ item.producto.nombre }}</h3>
-                    <p>SKU: {{ item.producto.sku }}</p>
-                    {% if item.producto.categoria %}
-                        <p>Categoría: {{ item.producto.categoria.nombre }}</p>
-                    {% endif %}
 
-                    {% if item.precios %}
-                        {% if item.precios|length > 1 %}
-                            <ul>
-                                {% for precio in item.precios %}
-                                    <li>{{ precio.proveedor__nombre }}: ${{ precio.precio_mxn }} ({{ precio.stock }} disponibles)</li>
-                                {% endfor %}
-                            </ul>
-                        {% else %}
-                            <p class="price">MXN ${{ item.precios.0.precio_mxn }} (Proveedor: {{ item.precios.0.proveedor__nombre }})</p>
-                        {% endif %}
-                    {% else %}
-                        <p class="price">No disponible</p>
-                    {% endif %}
-                </div>
-                {% endfor %}
-
-            {% else %}
-                <p class="no-products">No hay productos disponibles en este momento.</p>
-            {% endif %}
-        </div>
-    </main>
 <div id="producto-modal" class="modal">
-        <span class="close-button" id="close-producto-modal">&times;</span>
-        <div class="modal-body">
-            <div class="modal-image-gallery">
-                <img id="modal-imagen" src="" alt="Producto">
-            </div>
-            <div class="modal-details">
-                <h2 id="modal-nombre"></h2>
-                <p id="modal-descripcion-prod"></p>
-                <p id="modal-descripcion2-prod"></p>
-                <p id="modal-precio"></p>
-                <div class="modal-quantity-control">
-                    <label for="modal-cantidad">CANTIDAD:</label>
-                    <input type="number" id="modal-cantidad" value="1" min="1">
-                </div>
-                <button class="btn btn-secondary" id="agregar-modal-carrito">Agregar al carrito</button>
-                <p id="modal-existencia" class="texto-existencia"></p>
-                <p id="modal-garantia"></p> 
-                <div id="modal-caracteristicas-adicionales">
-                    <h4>Características Detalladas:</h4>
-                    <ul id="lista-caracteristicas-adicionales">
-                    </ul>
-                </div>
-            </div>
-        </div>
+    <div class="modal-content">
+        <span id="close-producto-modal" class="close">&times;</span>
+        <img id="modal-imagen" src="" alt="Imagen del producto" class="modal-image">
+        <h2 id="modal-nombre"></h2>
+        <p id="modal-descripcion-prod"></p>
+        <p id="modal-descripcion2-prod"></p>
+        <p id="modal-precio"></p>
+        <p id="modal-existencia"></p>
+        <p id="modal-garantia"></p>
+        <div id="modal-proveedores"></div>
     </div>
 </div>
 <div class="chat-container">
@@ -433,6 +396,6 @@
 
 
 <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
-<script src="{% static 'js/catalogo.js' %}"></script>
+<script src="/static/js/catalogo.js"></script>
 </body>
 </html>

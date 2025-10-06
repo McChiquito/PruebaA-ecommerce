@@ -46,47 +46,27 @@
         </section>
 
         <!-- Subida de catálogos de proveedores -->
-        <section class="admin-dashboard-section">
-            <h2>Subir Catálogos de Proveedores</h2>
+        <form method="POST" enctype="multipart/form-data" action="{% url 'productos:upload_catalogs' %}">
+            {% csrf_token %}
+            <label>📂 Catálogo de Arroba (Excel):</label>
+            <input type="file" name="catalogo_arroba"><br><br>
 
-            <div class="form-container">
-                <h3>Catálogo ARROBA</h3>
-                <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    {{ arroba_form.as_p }}
-                    <button type="submit" name="arroba-submit" class="btn btn-primary">Subir Arroba</button>
-                </form>
-            </div>
+            <label>📂 Catálogo de Proce (Excel):</label>
+            <input type="file" name="catalogo_proce"><br><br>
 
-            <hr>
+            <label>📂 Catálogo de Techsmart (PDF):</label>
+            <input type="file" name="catalogo_techsmart"><br><br>
 
-            <div class="form-container">
-                <h3>Catálogo PROCE</h3>
-                <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    {{ proce_form.as_p }}
-                    <button type="submit" name="proce-submit" class="btn btn-success">Subir Proce</button>
-                </form>
-            </div>
+            <button type="submit" class="default">Subir Catálogos</button>
+        </form>
 
-            <div class="form-container">
-                <h3>Catálogo TECHSMART</h3>
-                <form method="post" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    {{ techsmart_form.as_p }}
-                    <button type="submit" name="techsmart-submit" class="btn btn-info">Subir Techsmart</button>
-                </form>
-            </div>
-
-            {% if messages %}
-            <ul class="messages">
-                {% for message in messages %}
-                <li class="{{ message.tags }}">{{ message }}</li>
-                {% endfor %}
-            </ul>
-            {% endif %}
-        </section>
-
+        {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}
+                <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
         <!-- Soporte de Chat -->
         <section class="admin-dashboard-section">
             <h2>Soporte de Chat</h2>

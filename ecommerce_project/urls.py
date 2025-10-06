@@ -5,19 +5,18 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve
 import os
+
 urlpatterns = [
     re_path(r'^favicon\.ico$', serve, {
         'path': 'favicon.ico',
         'document_root': os.path.join(settings.STATIC_ROOT),
     }),
-    path('admin/', admin.site.urls),
-    # Esta línea es crucial para la URL raíz, e incluye todas las URLs de tu app 'productos'
-    path('accounts/', include('django.contrib.auth.urls')),
-    path('productos/', include('productos.urls', namespace='productos')), # <-- Solo una de estas líneas con namespace='productos'
 
-    
-    # ELIMINA o COMENTA LA SIGUIENTE LÍNEA SI LA TIENES AQUÍ:
-    # path('start-chat/', views.start_chat_view, name='start_chat'), 
+    path('admin/', admin.site.urls),
+    path('accounts/', include('django.contrib.auth.urls')),
+
+    # 👇 ESTA LÍNEA hace que la raíz "/" cargue las URLs de productos
+    path('', include(('productos.urls', 'productos'), namespace='productos')),
 ]
 
 if settings.DEBUG:

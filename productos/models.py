@@ -1,196 +1,181 @@
-# productos/models.py
+# ==========================================================
+# productos/models.py — Modelos principales del e-commerce
+# ==========================================================
 
 from django.db import models
-from django.contrib.auth.models import User
 from django.utils.text import slugify
-from decimal import Decimal
-from django.conf import settings # Asegúrate de que settings esté importado
+from django.conf import settings
 
-@property
-def precio_mxn(self):
-    if self.moneda == 'USD':
-        tasa = ConfiguracionGlobal.objects.first().tasa_cambio_usd_mxn
-        return round(self.precio * tasa, 2)
-    return self.precio
-class ProveedorPrecio(models.Model):
-    producto = models.ForeignKey('Producto', on_delete=models.CASCADE)
-    proveedor = models.ForeignKey('Proveedor', on_delete=models.CASCADE)
-    precio = models.DecimalField(max_digits=10, decimal_places=2)
-    stock = models.IntegerField()
-    moneda = models.CharField(max_length=10, default='MXN')  # o USD
 
-    def __str__(self):
-        return f"{self.producto.sku} - {self.proveedor}"
-
-    @property
-    def precio_mxn(self):
-        from .models import ConfiguracionGlobal
-        tasa = ConfiguracionGlobal.objects.first().tasa_cambio_usd_mxn
-        return round(self.precio * tasa, 2) if self.moneda == 'USD' else self.precio
+# ==========================================================
+# 1️⃣  MODELO DE CATEGORÍAS
+# ==========================================================
+class Categoria(models.Model):
+    nombre = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True, blank=True)
 
     class Meta:
-        unique_together = ('producto', 'proveedor')
+        verbose_name_plural = "Categorías"
 
     def __str__(self):
-        return f"{self.producto.sku} - {self.proveedor}"
-
-
-# 1. Definición de Categoria
-class Categoria(models.Model):
-    nombre = models.CharField(max_length=100, unique=True)
-    slug = models.SlugField(unique=True, blank=True, null=True)
+        return self.nombre
 
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.nombre)
         super().save(*args, **kwargs)
 
-    def __str__(self):
-        return self.nombre
+
+# ==========================================================
+# 2️⃣  MODELO DE PROVEEDORES
+# ==========================================================
+class Proveedor(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+    tasa_cambio_usd_mxn = models.FloatField(
+        default=18.0,
+        help_text="Tasa de cambio específica de este proveedor"
+    )
+    incluye_iva = models.BooleanField(default=True, help_text="Indica si los precios del catálogo ya incluyen IVA")
+    porcentaje_iva = models.FloatField(default=16.0, help_text="Porcentaje de IVA aplicable si no está incluido")
+
 
     class Meta:
-        verbose_name = "Categoría"
-        verbose_name_plural = "Categorías"
-# productos/models.py
-class ConfiguracionGlobal(models.Model):
-    tasa_cambio_usd_mxn = models.FloatField(default=18.0, help_text="Tasa de cambio de USD a MXN")
+        verbose_name_plural = "Proveedores"
 
     def __str__(self):
-        return f"Tasa: {self.tasa_cambio_usd_mxn}"
+        return f"{self.nombre} (Tasa: {self.tasa_cambio_usd_mxn})"
+
+
+# ==========================================================
+# 3️⃣  CONFIGURACIÓN GLOBAL
+# ==========================================================
+class ConfiguracionGlobal(models.Model):
+    """
+    Define valores globales del sistema, como la tasa de cambio global.
+    """
+    tasa_cambio_usd_mxn = models.FloatField(
+        default=18.0,
+        help_text="Tasa global de cambio USD a MXN"
+    )
 
     class Meta:
         verbose_name = "Configuración Global"
         verbose_name_plural = "Configuración Global"
 
-
-# 2. Definición de Proveedor
-class Proveedor(models.Model):
-    nombre = models.CharField(max_length=100, unique=True)
-    direccion = models.TextField(blank=True, null=True)
-    telefono = models.CharField(max_length=20, blank=True, null=True)
-    email = models.EmailField(blank=True, null=True)
-    divisa_defecto = models.CharField(max_length=3, default='USD', help_text="Divisa por defecto de las listas de precios de este proveedor (ej. USD, EUR)")
-    tasa_cambio_usd_mxn = models.DecimalField(
-        max_digits=10,
-        decimal_places=4,
-        default=Decimal('1.0000'),
-        help_text="Tipo de cambio específico de USD a MXN para este proveedor."
-    )
-
     def __str__(self):
-        return self.nombre
-
-    class Meta:
-        verbose_name = "Proveedor"
-        verbose_name_plural = "Proveedores"
+        return f"Tasa: {self.tasa_cambio_usd_mxn}"
 
 
-# 3. Definición de TipoCambio
-class TipoCambio(models.Model):
-    divisa_origen = models.CharField(max_length=3, unique=True, help_text="Ej. USD")
-    divisa_destino = models.CharField(max_length=3, default='MXN', help_text="Ej. MXN")
-    valor = models.DecimalField(max_digits=10, decimal_places=4, help_text="Valor de 1 unidad de divisa_origen en divisa_destino")
-    fecha_actualizacion = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"1 {self.divisa_origen} = {self.valor} {self.divisa_destino}"
-
-    class Meta:
-        verbose_name = "Tipo de Cambio"
-        verbose_name_plural = "Tipos de Cambio"
-        ordering = ['-fecha_actualizacion']
-
-
-# 4. Definición de Producto
+# ==========================================================
+# 4️⃣  PRODUCTOS
+# ==========================================================
 class Producto(models.Model):
-    sku = models.CharField(max_length=50, unique=True)
-    stock = models.IntegerField(default=0)
-    nombre = models.CharField(max_length=200)
+    sku = models.CharField(max_length=100, unique=True)
     descripcion = models.TextField(blank=True, null=True)
+    precio = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    precio_dolar = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, blank=True)
-    precio = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    precio_dolar = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True,
-                                       help_text="Precio original del producto en la divisa del proveedor")
     proveedor = models.ForeignKey(Proveedor, on_delete=models.SET_NULL, null=True, blank=True)
-    inventario = models.IntegerField(default=0, null=True, blank=True)
-    activo = models.BooleanField(default=True)
-    imagen = models.ImageField(upload_to='productos_imagenes/', null=True, blank=True)
-    marca = models.CharField(max_length=100, blank=True, null=True)
-    modelo_fabricante = models.CharField(max_length=100, blank=True, null=True)
-    compatibilidad = models.TextField(blank=True, null=True)
-    garantia_meses = models.IntegerField(blank=True, null=True)
-    peso_kg = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
+    garantia = models.CharField(max_length=100, blank=True, null=True)
+    condicion = models.CharField(max_length=100, blank=True, null=True)
+    imagen = models.ImageField(upload_to="productos_imagenes/", blank=True, null=True)
+    stock = models.IntegerField(default=0)
+    creado = models.DateTimeField(auto_now_add=True)
+    actualizado = models.DateTimeField(auto_now=True)
 
-    # Campos para componentes específicos
-    num_nucleos = models.IntegerField(blank=True, null=True)
-    velocidad_ghz = models.DecimalField(max_digits=4, decimal_places=2, blank=True, null=True)
-    memoria_gb = models.IntegerField(blank=True, null=True)
-    tipo_memoria = models.CharField(max_length=50, blank=True, null=True)
-    capacidad_gb = models.IntegerField(blank=True, null=True)
-    velocidad_mhz = models.IntegerField(blank=True, null=True)
-    tipo_ram = models.CharField(max_length=50, blank=True, null=True)
+    class Meta:
+        verbose_name_plural = "Productos"
+
+    def __str__(self):
+        return f"{self.sku} - {self.descripcion}"
 
     @property
     def precio_mxn(self):
-        precio_base_mxn = Decimal(0)
+        """
+        Calcula el precio del producto en MXN con base en la tasa del proveedor
+        o el precio establecido en pesos.
+        """
+        from decimal import Decimal
 
-        if self.precio_dolar is not None and self.precio_dolar > 0 and self.proveedor:
-            tasa_cambio = self.proveedor.tasa_cambio_usd_mxn
-            precio_base_mxn = self.precio_dolar * tasa_cambio
-        elif self.precio is not None and self.precio > 0:
-            precio_base_mxn = self.precio
-        else:
-            return Decimal(0)
+        precio_base = Decimal(0)
+        if self.precio_dolar and self.proveedor:
+            precio_base = Decimal(self.precio_dolar) * Decimal(self.proveedor.tasa_cambio_usd_mxn)
+        elif self.precio:
+            precio_base = Decimal(self.precio)
+
+        if precio_base <= 0:
+            return Decimal("0.00")
 
         try:
-            iva_rate = settings.IVA_RATE
-            precio_con_iva = precio_base_mxn * (Decimal('1') + iva_rate)
-            return precio_con_iva.quantize(Decimal('0.01'))
-        except AttributeError:
-            return precio_base_mxn.quantize(Decimal('0.01'))
-        except Exception as e:
-            return precio_base_mxn.quantize(Decimal('0.01'))
+            iva_rate = getattr(settings, "IVA_RATE", Decimal("0.00"))
+            precio_final = precio_base * (Decimal("1") + iva_rate)
+            return precio_final.quantize(Decimal("0.01"))
+        except Exception:
+            return precio_base.quantize(Decimal("0.01"))
 
-    def __str__(self):
-        return self.nombre
+
+# ==========================================================
+# 5️⃣  PRECIOS POR PROVEEDOR (RELACIÓN INTERMEDIA)
+# ==========================================================
+class ProveedorPrecio(models.Model):
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.CASCADE)
+    precio = models.FloatField(default=0.0)
+    stock = models.IntegerField(default=0)
+    moneda = models.CharField(max_length=10, default="MXN")
 
     class Meta:
-        verbose_name = "Producto"
-        verbose_name_plural = "Productos"
-
-
-# --- MODELOS PARA EL CHAT ---
-class Conversation(models.Model):
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
-                             help_text="Usuario registrado que inició la conversación, si aplica.")
-    session_key = models.CharField(max_length=40, null=True, blank=True,
-                                   help_text="Clave de sesión para usuarios anónimos.")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    is_closed = models.BooleanField(default=False)
-    user_display_name = models.CharField(max_length=100, blank=True, null=True,
-                                         help_text="Nombre que el usuario proporcionó al iniciar el chat.")
-    initial_message_text = models.TextField(blank=True, null=True,
-                                            help_text="Primer mensaje/duda inicial del usuario.")
+        verbose_name_plural = "Precios por Proveedor"
+        unique_together = ("producto", "proveedor")
 
     def __str__(self):
-        if self.user_display_name:
-            return f"Conversación con {self.user_display_name}"
-        elif self.user:
-            return f"Conversación con {self.user.username}"
-        elif self.session_key:
-            return f"Conversación anónima ({self.session_key[:8]}...)"
-        return f"Conversación #{self.id}"
+        return f"{self.proveedor.nombre} - {self.producto.sku}"
+
+    @property
+    def precio_mxn(self):
+        from .models import ConfiguracionGlobal
+        config = ConfiguracionGlobal.objects.first()
+        tasa = config.tasa_cambio_usd_mxn if config else 18.0
+        return round(self.precio * tasa, 2) if self.moneda == "USD" else self.precio
+
+
+# ==========================================================
+# 6️⃣  TIPO DE CAMBIO HISTÓRICO (opcional)
+# ==========================================================
+class TipoCambio(models.Model):
+    fecha = models.DateField(auto_now_add=True)
+    tasa_usd_mxn = models.FloatField(default=18.0)
+
+    class Meta:
+        verbose_name_plural = "Historial de Tipos de Cambio"
+
+    def __str__(self):
+        return f"{self.fecha} — {self.tasa_usd_mxn}"
+
+
+# ==========================================================
+# 7️⃣  CHAT DE SOPORTE (CONVERSACIONES)
+# ==========================================================
+class Conversation(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    initial_message_text = models.TextField(blank=True, null=True)
+
+    class Meta:
+        verbose_name_plural = "Conversaciones"
+
+    def __str__(self):
+        return f"Conversación #{self.id} — {self.created_at.strftime('%d/%m/%Y %H:%M')}"
+
 
 class ChatMessage(models.Model):
-    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages')
-    sender_is_admin = models.BooleanField(default=False, help_text="True si el mensaje es del administrador.")
-    message = models.TextField()
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name="messages")
+    text = models.TextField()
+    sender = models.CharField(max_length=50, choices=[("user", "Usuario"), ("admin", "Administrador")])
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['timestamp']
+        verbose_name_plural = "Mensajes del Chat"
 
     def __str__(self):
-        sender = "Admin" if self.sender_is_admin else "Usuario"
-        return f"{sender} ({self.timestamp.strftime('%H:%M')}): {self.message[:50]}..."
+        return f"[{self.sender}] {self.text[:40]}"
+# ==========================================================
