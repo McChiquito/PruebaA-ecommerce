@@ -270,9 +270,41 @@ async function mostrarDetallesProducto(sku) {
     const modalExistencia = document.querySelector('#modal-existencia');
     const modalGarantia = document.querySelector('#modal-garantia');
     const modalProveedores = document.querySelector('#modal-proveedores');
+    const contCarac = document.getElementById('modal-caracteristicas-adicionales');
+    const listaCarac = document.getElementById('lista-caracteristicas-adicionales');
+    const productoModal = document.getElementById('producto-modal');
+    const closeBtn = document.getElementById('close-producto-modal');
 
     const usaPlantillaDetallada =
       modalImagen || modalNombre || modalDescripcionProd || modalPrecio || modalProveedores;
+      function cerrarModalProducto() {
+      if (productoModal) productoModal.style.display = 'none';
+      document.body.classList.remove('modal-open');
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', cerrarModalProducto);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && productoModal && productoModal.style.display !== 'none') {
+        cerrarModalProducto();
+      }
+    });  
+
+    if (contCarac && listaCarac) {
+  const textDetallado = (producto.descripcion_2 || producto.descripcion || '').trim();
+
+  // Si quieres mostrarlo como párrafos en lugar de lista, cambia este bloque.
+  const items = textDetallado
+    .split(/\r?\n|\. (?=[A-ZÁÉÍÓÚÑ0-9])/g) // líneas o oraciones
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  listaCarac.innerHTML = items.length
+    ? items.map(s => `<li>${s}</li>`).join('')
+    : '<li>No hay características adicionales.</li>';
+  }
 
     if (usaPlantillaDetallada) {
       if (modalImagen) modalImagen.src = producto.imagen || '/static/img/no_image.png';

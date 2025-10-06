@@ -1938,3 +1938,41 @@ main {
   padding: 6px 10px; border: 0; border-radius: 8px;
   cursor: pointer;
 }
+/* El contenedor del contenido del modal debe ser referencia para el botón */
+#producto-modal .modal-body {
+  position: relative;
+}
+
+/* Botón de cierre arriba-derecha de la tarjeta */
+#producto-modal .close-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+  z-index: 2;
+  background: rgba(0,0,0,0.05);
+}
+
+#producto-modal .close-button:hover {
+  background: rgba(0,0,0,0.1);
+}
+
+/* En pantallas pequeñas acércalo al borde */
+@media (max-width: 768px){
+  #producto-modal .close-button {
+    top: 8px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    font-size: 20px;
+  }
+}

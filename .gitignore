@@ -29,3 +29,6 @@ staticfiles/
 # SQLite
 db.sqlite3
 *.sqlite3
+
+# Node modules
+node_modules/
