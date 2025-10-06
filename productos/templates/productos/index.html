@@ -182,31 +182,36 @@
     </div>
 </section>
 <div id="producto-modal" class="modal">
-        <span class="close-button" id="close-producto-modal">&times;</span>
-        <div class="modal-body">
-            <div class="modal-image-gallery">
-                <img id="modal-imagen" src="" alt="Producto">
-            </div>
-            <div class="modal-details">
-                <h2 id="modal-nombre"></h2>
-                <p id="modal-descripcion-prod"></p>
-                <p id="modal-descripcion2-prod"></p>
-                <p id="modal-precio"></p>
-                <div class="modal-quantity-control">
-                    <label for="modal-cantidad">CANTIDAD:</label>
-                    <input type="number" id="modal-cantidad" value="1" min="1">
-                </div>
-                <button class="btn btn-secondary" id="agregar-modal-carrito">Agregar al carrito</button>
-                <p id="modal-existencia" class="texto-existencia"></p>
-                <p id="modal-garantia"></p>
-                <div id="modal-caracteristicas-adicionales">
-                    <h4>Características Detalladas:</h4>
-                    <ul id="lista-caracteristicas-adicionales">
-                    </ul>
-                </div>
-            </div>
-        </div>
+  <span class="close-button" id="close-producto-modal" aria-label="Cerrar">×</span>
+  <div class="modal-body product-modal-grid">
+    <div class="modal-image-gallery">
+      <img id="modal-imagen" src="" alt="Producto">
     </div>
+
+    <div class="modal-details">
+      <h2 id="modal-nombre"></h2>
+      <!--<p id="modal-descripcion-prod"></p>-->
+      <p id="modal-descripcion2-prod"></p>
+      <p id="modal-precio"></p>
+
+      <div class="modal-quantity-control">
+        <label for="modal-cantidad">CANTIDAD:</label>
+        <input type="number" id="modal-cantidad" value="1" min="1">
+      </div>
+
+      <button class="btn btn-secondary" id="agregar-modal-carrito">Agregar al carrito</button>
+      <p id="modal-existencia" class="texto-existencia"></p>
+      <p id="modal-garantia"></p>
+    </div>
+
+    <!-- ↓↓↓ ahora es hermano directo de .modal-image-gallery y .modal-details -->
+    <div id="modal-caracteristicas-adicionales" class="col-details">
+      <h4>Características Detalladas:</h4>
+      <ul id="lista-caracteristicas-adicionales"></ul>
+    </div>
+  </div>
+</div>
+
 </div>
 
 <footer>
