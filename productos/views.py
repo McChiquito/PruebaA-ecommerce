@@ -17,13 +17,68 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.sessions.models import Session
 import json
 from django.utils import timezone
-from .forms import ExcelUploadForm
+from productos.forms import ArrobaCatalogForm, ProceCatalogForm, TechsmartCatalogForm
+from productos.catalogos.arroba import procesar_catalogo_arroba
+from productos.catalogos.proce import procesar_catalogo_proce
+from productos.catalogos.techsmart import procesar_catalogo_techsmart
+
 from django.urls import reverse
 from core.utils import get_tasa_dolar
 
 tasa = get_tasa_dolar()
 
+def admin_dashboard(request):
+    # Instanciar los formularios vacíos
+    form_arroba = ArrobaCatalogForm()
+    form_proce = ProceCatalogForm()
+    form_techsmart = TechsmartCatalogForm()
 
+    if request.method == 'POST':
+        if 'arroba_catalog' in request.FILES:
+            file = request.FILES['arroba_catalog']
+            path = default_storage.save(f'temp/{file.name}', file)
+            full_path = os.path.join(settings.MEDIA_ROOT, path)
+            procesar_catalogo_arroba(full_path)
+
+        elif 'proce_catalog' in request.FILES:
+            file = request.FILES['proce_catalog']
+            path = default_storage.save(f'temp/{file.name}', file)
+            full_path = os.path.join(settings.MEDIA_ROOT, path)
+            procesar_catalogo_proce(full_path)
+
+        elif 'techsmart_catalog' in request.FILES:
+            file = request.FILES['techsmart_catalog']
+            path = default_storage.save(f'temp/{file.name}', file)
+            full_path = os.path.join(settings.MEDIA_ROOT, path)
+            procesar_catalogo_techsmart(full_path)
+
+    context = {
+        'form_arroba': form_arroba,
+        'form_proce': form_proce,
+        'form_techsmart': form_techsmart,
+    }
+
+    return render(request, 'admin_dashboard.html', context)
+  
+def vista_catalogo(request):
+    # Obtener todos los productos
+    productos = Producto.objects.all()
+
+    # Estructura: lista de diccionarios que agrupan productos y sus precios por proveedor
+    productos_con_precios = []
+    for producto in productos:
+        precios = ProveedorPrecio.objects.filter(producto=producto)
+        productos_con_precios.append({
+            'producto': producto,
+            'precios': list(precios.values('proveedor__nombre', 'precio_mxn', 'stock'))
+        })
+
+    context = {
+        'productos_con_precios': productos_con_precios,
+        'productos': productos,
+    }
+
+    return render(request, 'index.html', context)
 
 # --- VISTA PARA LA PÁGINA DE INICIO ---
 def inicio(request):

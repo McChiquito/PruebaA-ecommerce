@@ -53,11 +53,10 @@ class Categoria(models.Model):
         verbose_name_plural = "Categorías"
 # productos/models.py
 class ConfiguracionGlobal(models.Model):
-    nombre = models.CharField(max_length=100)
-    valor = models.FloatField()
+    tasa_cambio_usd_mxn = models.FloatField(default=18.0, help_text="Tasa de cambio de USD a MXN")
 
     def __str__(self):
-        return f"{self.nombre}: {self.valor}"
+        return f"Tasa: {self.tasa_cambio_usd_mxn}"
 
     class Meta:
         verbose_name = "Configuración Global"

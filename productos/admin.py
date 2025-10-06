@@ -9,7 +9,7 @@ admin.site.register(TipoCambio)
 
 @admin.register(ConfiguracionGlobal)
 class ConfiguracionGlobalAdmin(admin.ModelAdmin):
-    list_display = ('nombre', 'valor')
+    list_display = ('id', 'tasa_cambio_usd_mxn')
 @admin.register(Categoria)
 class CategoriaAdmin(admin.ModelAdmin):
     list_display = ('nombre', 'slug')

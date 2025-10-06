@@ -19,9 +19,6 @@
             <ul>
                 <li><a href="{% url 'productos:index' %}">Inicio</a></li>
                 <li><a href="{% url 'productos:admin_dashboard' %}">Dashboard</a></li>
-                <li><a href="{% url 'productos:upload_catalogs' %}">Subir Catálogos de Proveedores</a></li>
-                <!-- <li><a href="{% url 'productos:admin_chat_panel' %}">Chat Admin</a></li> -->
-
             </ul>
         </nav>
         <div class="auth-controls">
@@ -40,25 +37,62 @@
 
         <a href="{% url 'productos:index' %}" class="btn-back-to-home">Regresar a la Página Principal</a>
 
+        <!-- Gestión de productos -->
         <section class="admin-dashboard-section">
             <h2>Gestión de Productos</h2>
             <p>Aquí puedes gestionar tus productos, ver estadísticas, etc.</p>
-            <a href="{% url 'productos:upload_catalogs' %}" class="btn-action">Subir/Actualizar Catálogo (Excel)</a>
-            
-            {# AÑADE ESTE NUEVO ENLACE AQUÍ #}
             <a href="/admin/productos/producto/add/" class="btn-action" style="background-color: var(--color-tertiary);">Añadir Nuevo Producto (Manual)</a>
-            {# Opcional: También puedes añadir un enlace a la lista completa de productos en el admin #}
             <a href="/admin/productos/producto/" class="btn-action">Ver/Editar Productos Existentes</a>
-
         </section>
 
+        <!-- Subida de catálogos de proveedores -->
+        <section class="admin-dashboard-section">
+            <h2>Subir Catálogos de Proveedores</h2>
+
+            <div class="form-container">
+                <h3>Catálogo ARROBA</h3>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ arroba_form.as_p }}
+                    <button type="submit" name="arroba-submit" class="btn btn-primary">Subir Arroba</button>
+                </form>
+            </div>
+
+            <hr>
+
+            <div class="form-container">
+                <h3>Catálogo PROCE</h3>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ proce_form.as_p }}
+                    <button type="submit" name="proce-submit" class="btn btn-success">Subir Proce</button>
+                </form>
+            </div>
+
+            <div class="form-container">
+                <h3>Catálogo TECHSMART</h3>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ techsmart_form.as_p }}
+                    <button type="submit" name="techsmart-submit" class="btn btn-info">Subir Techsmart</button>
+                </form>
+            </div>
+
+            {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </section>
+
+        <!-- Soporte de Chat -->
         <section class="admin-dashboard-section">
             <h2>Soporte de Chat</h2>
             <p>Accede al panel de chat para responder a los usuarios.</p>
             <a href="{% url 'productos:admin_chat_panel' %}" class="btn-action">Ir al Chat Admin</a>
         </section>
-
     </main>
-
 </body>
 </html>

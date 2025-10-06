@@ -3,7 +3,7 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from . import views
-from .views import ProductoAPIView
+from .views import ProductoAPIView, vista_catalogo
 
 app_name = 'productos'
 
@@ -16,7 +16,9 @@ urlpatterns = [
   #  path('admin-chat/', views.admin_chat_panel, name='admin_chat_panel'),
  #   path('admin-chat/<int:conversation_id>/', views.admin_chat_panel, name='admin_chat_panel_detail'),
     path('admin-chat-panel/', views.admin_chat_panel, name='admin_chat_panel'),
-    path('admin-dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
+    path("admin-dashboard/", views.admin_dashboard, name="admin_dashboard"),
+    path('', vista_catalogo, name='vista_catalogo'),
+
 ]
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0])
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

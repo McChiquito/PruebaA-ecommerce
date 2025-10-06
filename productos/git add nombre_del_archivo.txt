@@ -1,1 +1,0 @@
-git add nombre_del_archivo
