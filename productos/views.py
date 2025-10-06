@@ -12,7 +12,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from rest_framework import generics
 from .serializers import ProductoSerializer
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.sessions.models import Session
@@ -387,8 +387,48 @@ def close_conversation_api(request, conversation_id):
 # ==========================================================
 # API: Productos en formato JSON (para el catálogo principal)
 # ==========================================================
-
+@require_GET
 def api_productos(request):
+    # Trae categoría en la misma consulta y evita N+1 en precios de proveedor
+    productos = (
+        Producto.objects
+        .select_related('categoria')
+        .prefetch_related('proveedorprecio_set__proveedor')
+    )
+
+    data = []
+    for p in productos:
+        # Detalle de precios por proveedor
+        precios_proveedor = []
+        for pp in p.proveedorprecio_set.all():
+            precios_proveedor.append({
+                "proveedor": pp.proveedor.nombre,
+                "precio": float(pp.precio) if pp.precio is not None else None,
+                "stock": pp.stock if pp.stock is not None else 0,
+            })
+
+        # Precio mínimo disponible (si alguno tiene precio)
+        precio_min = min(
+            (x["precio"] for x in precios_proveedor if x["precio"] is not None),
+            default=None
+        )
+
+        data.append({
+            "id": p.id,
+            "sku": p.sku,
+            # Prioriza p.nombre; si no hay, usa un snippet de descripción; si no, el SKU
+            "nombre": (p.nombre or ((p.descripcion[:80] + "…") if p.descripcion else p.sku)),
+            "descripcion": p.descripcion or "",
+            "categoria_nombre": p.categoria.nombre if p.categoria else "",
+            "imagen": p.imagen.url if getattr(p, "imagen", None) else "",
+            # usa el campo que tengas: inventario / stock (fallback a 0)
+            "inventario": getattr(p, "inventario", None) or getattr(p, "stock", 0) or 0,
+            "garantia": getattr(p, "garantia", None),
+            "precios_proveedor": precios_proveedor,
+            "precio_minimo": precio_min,
+        })
+
+        return JsonResponse(data, safe=False)
     productos = Producto.objects.all()
     data = []
 
@@ -422,7 +462,7 @@ def api_productos(request):
             "precio_minimo": precio_min,  # 🔥 precio más barato
         })
 
-    return JsonResponse(data, safe=False)
+        return JsonResponse(data, safe=False)
     productos = Producto.objects.all()
     data = []
 
@@ -439,7 +479,7 @@ def api_productos(request):
             'garantia_meses': getattr(p, 'garantia', None),
         })
 
-    return JsonResponse(data, safe=False)
+        return JsonResponse(data, safe=False)
 
     productos = Producto.objects.all().prefetch_related("proveedorprecio_set")
 
@@ -462,7 +502,7 @@ def api_productos(request):
             "precios": precios,
         })
 
-    return JsonResponse({"productos": data})
+        return JsonResponse({"productos": data})
     productos = Producto.objects.select_related('categoria').all()
 
     data = []

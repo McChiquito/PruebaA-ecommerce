@@ -23,3 +23,9 @@ staticfiles/       # Archivos estáticos recolectados por `collectstatic`
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+
+staticfiles/
+
+# SQLite
+db.sqlite3
+*.sqlite3

@@ -55,6 +55,7 @@ class ProveedorPrecioInline(admin.TabularInline):
 class ProductoAdmin(admin.ModelAdmin):
     list_display = (
         'sku',
+        'nombre',
         'descripcion',
         'categoria',
         'mostrar_precios_por_proveedor',
