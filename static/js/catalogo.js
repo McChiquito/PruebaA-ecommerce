@@ -8,6 +8,23 @@
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
+  
+  function toNum(v) {
+    if (v == null) return NaN;
+    if (typeof v === 'number') return v;
+    return Number(String(v).replace(/[^0-9.]/g, ''));
+  }
+
+  function getProveedores(producto) {
+    if (Array.isArray(producto.precios_proveedor) && producto.precios_proveedor.length) {
+      return producto.precios_proveedor;
+    }
+    if (Array.isArray(producto.proveedores)) {
+      return producto.proveedores;
+    }
+    return [];
+  }
+
   // Crea o reutiliza un modal. Si no hay, genera #auto-modal con .modal-body
   function getOrCreateModal() {
     const candidates = [
@@ -61,87 +78,125 @@
 
   // Referencias del modal (se crean ya mismo)
   const { modal: productoModal, body: modalBody } = getOrCreateModal();
-
-  // API: carga catálogo y pinta tarjetas en .catalogo-grid
-  async function fetchProductos() {
+  const state = { categoriaId: null, soloStock: false, search: '' };
+  // --- Cargar y pintar categorías en #categoria-list (radios)
+  async function loadCategorias() {
     try {
-      const resp = await fetch('/api/productos/');
-      const data = await resp.json();
+      const resp = await fetch('/api/categorias/');
+      const cats = await resp.json();
 
-      // Seleccionamos por CLASE, no por ID
-      const container = document.querySelector('.catalogo-grid');
-      const mensajeVacio = $('#mensaje-vacio');
+      const box = document.getElementById('categoria-list');
+      if (!box) return; // si no existe el contenedor, no hacemos nada
 
-      if (!container) {
-        console.warn('No existe .catalogo-grid en el DOM.');
-        return;
-      }
+      box.innerHTML = `
+        <label style="display:block;margin:4px 0">
+          <input type="radio" name="categoria" value="" checked>
+          Todas
+        </label>
+        ${cats.map(c => `
+          <label style="display:block;margin:4px 0">
+            <input type="radio" name="categoria" value="${c.id}">
+            ${c.nombre}
+          </label>
+        `).join('')}
+      `;
 
-      container.innerHTML = '';
-
-      if (!data || data.length === 0) {
-        if (mensajeVacio) mensajeVacio.style.display = 'block';
-        return;
-      } else {
-        if (mensajeVacio) mensajeVacio.style.display = 'none';
-      }
-
-      data.forEach(producto => renderizarProducto(producto, container));
-
+      // cuando cambia la categoría, recargamos el catálogo
+      box.addEventListener('change', (e) => {
+        if (e.target && e.target.name === 'categoria') {
+          state.categoriaId = e.target.value || null;
+          fetchProductos();
+        }
+      });
     } catch (err) {
-      console.error('Error al cargar productos:', err);
+      console.error('Error cargando categorías:', err);
     }
   }
+  // API: carga catálogo y pinta tarjetas en .catalogo-grid
+async function fetchProductos() {
+  try {
+    const params = new URLSearchParams();
+    if (state.categoriaId) params.set('categoria', state.categoriaId);
+    if (state.soloStock)  params.set('stock', '1');
+    if (state.search)     params.set('q', state.search);
+
+    const resp = await fetch('/api/productos/' + (params.toString() ? `?${params}` : ''));
+    const data = await resp.json();
+
+    const container =
+      document.querySelector('.catalogo-grid') ||
+      document.getElementById('catalogo-grid');
+
+    const mensajeVacio = document.getElementById('mensaje-vacio');
+
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (!data || !data.length) {
+      if (mensajeVacio) mensajeVacio.style.display = 'block';
+      return;
+    } else if (mensajeVacio) {
+      mensajeVacio.style.display = 'none';
+    }
+
+    data.forEach(p => renderizarProducto(p, container));
+  } catch (err) {
+    console.error('Error al cargar productos:', err);
+  }
+}
 
   // Crea una card de producto
-  function renderizarProducto(producto, container) {
-    const titulo = producto.nombre || producto.sku;  // ← nunca usamos descripcion como título
-    const card = document.createElement('div');
-    card.className = 'product-card';
+function renderizarProducto(producto, container) {
+  const card = document.createElement('div');
+  card.className = 'product-card';
 
-    const precioPrincipal = (typeof producto.precio_minimo === 'number')
-      ? `$${producto.precio_minimo.toFixed(2)} MXN`
-      : (producto.precio_mxn != null ? `$${Number(producto.precio_mxn).toFixed(2)} MXN` : 'N/A');
+  const titulo = producto.nombre || producto.sku;
 
-    let preciosProveedores = '';
-    if (Array.isArray(producto.precios_proveedor) && producto.precios_proveedor.length > 0) {
-      preciosProveedores = `
-        <div class="proveedores-lista">
-          <h4>Precios por proveedor:</h4>
-          <ul>
-            ${producto.precios_proveedor.map(p =>
-              `<li>${p.proveedor}: $${Number(p.precio).toFixed(2)} MXN (Stock: ${p.stock})</li>`
-            ).join('')}
-          </ul>
-        </div>
-      `;
-    } else if (Array.isArray(producto.proveedores) && producto.proveedores.length > 0) {
-      preciosProveedores = `
-        <div class="proveedores-lista">
-          <h4>Precios por proveedor:</h4>
-          <ul>
-            ${producto.proveedores.map(p =>
-              `<li>${p.nombre || p.proveedor}: $${Number(p.precio).toFixed(2)} MXN (Stock: ${p.stock})</li>`
-            ).join('')}
-          </ul>
-        </div>
-      `;
-    }
+  // Datos ya calculados por el backend:
+  const precioNum   = (typeof producto.precio_minimo === 'number') ? producto.precio_minimo : null;
+  const showProv    = !!producto.mostrar_proveedor;  // público = false
+  const mejor       = producto.mejor_oferta || null; // null en público
+  const stockMejor  = (typeof producto.stock_mejor === 'number') ? producto.stock_mejor : (producto.inventario || 0);
 
-    card.innerHTML = `
-      <img src="${producto.imagen || '/static/img/no_image.png'}" alt="${producto.nombre || 'Producto'}" class="product-image">
-      <h3 class="product-title">${producto.nombre || producto.sku}</h3>
-      <p class="product-category">${producto.categoria_nombre || ''}</p>
-      <p class="product-price">${precioPrincipal}</p>
-      <p class="product-stock">${(producto.inventario > 0) ? `En existencia: ${producto.inventario}` : 'Agotado'}</p>
-      ${preciosProveedores}
-      <div class="product-actions">
-        <button class="btn btn-primary ver-detalles" data-sku="${producto.sku}">Ver Detalles</button>
+  // Etiqueta de stock:
+  const stockLabel = (showProv && mejor)
+    ? (mejor.stock > 0
+        ? `En existencia: ${mejor.stock} (por ${mejor.proveedor})`
+        : `Agotado (por ${mejor.proveedor})`)
+    : (stockMejor > 0 ? `En existencia: ${stockMejor}` : 'Agotado');
+
+  // Lista de proveedores: solo si está permitido
+  let preciosProveedores = '';
+  if (showProv && Array.isArray(producto.precios_proveedor) && producto.precios_proveedor.length) {
+    preciosProveedores = `
+      <div class="proveedores-lista">
+        <h4>Precios por proveedor:</h4>
+        <ul>
+          ${producto.precios_proveedor.map(p => {
+            const precio = (typeof p.precio === 'number') ? p.precio.toFixed(2) : 'N/D';
+            const stock = (p.stock != null) ? p.stock : 'N/D';
+            return `<li>${p.proveedor}: $${precio} MXN (Stock: ${stock})</li>`;
+          }).join('')}
+        </ul>
       </div>
     `;
-
-    container.appendChild(card);
   }
+
+  card.innerHTML = `
+    <img src="${producto.imagen || '/static/img/no_image.png'}" alt="${titulo}" class="product-image">
+    <p class="product-category">${producto.categoria_nombre || ''}</p>
+    <h3 class="product-title">${titulo}</h3>
+    <p class="product-price">${precioNum != null ? `$${precioNum.toFixed(2)} MXN` : 'Precio no disponible'}</p>
+    <p class="product-stock">${stockLabel}</p>
+    ${preciosProveedores}
+    <div class="product-actions">
+      <button class="btn btn-primary ver-detalles" data-sku="${producto.sku}">Ver Detalles</button>
+    </div>
+  `;
+  container.appendChild(card);
+}
+
+
 
   // ===== DETALLES: intenta /api/producto/<sku>/ y si no, usa ?sku= o ?search= =====
  
@@ -234,141 +289,123 @@ function normalizarProducto(p) {
 }
 
   // Pega esto reemplazando tu función actual:
+// Muestra el modal con detalle del producto usando la API de detalle por SKU
+// Muestra el modal con el detalle de un producto por SKU
 async function mostrarDetallesProducto(sku) {
+  // ---- refs del DOM ----
+  const modal            = document.getElementById('producto-modal');
+  const modalImg         = document.getElementById('modal-imagen');
+  const modalNombre      = document.getElementById('modal-nombre');
+  const modalDesc1       = document.getElementById('modal-descripcion-prod');
+  const modalDesc2       = document.getElementById('modal-descripcion2-prod');
+  const modalPrecio      = document.getElementById('modal-precio');
+  const modalExistencia  = document.getElementById('modal-existencia');
+  const modalGarantia    = document.getElementById('modal-garantia');
+  const modalCaracUl     = document.getElementById('lista-caracteristicas-adicionales');
+  const btnAgregar       = document.getElementById('agregar-modal-carrito');
+  const inputCantidad    = document.getElementById('modal-cantidad');
+  const provBox          = document.getElementById('modal-proveedores'); // opcional en tu HTML
+
+  const setText = (el, txt) => { if (el) el.textContent = txt ?? ''; };
+
   try {
-    // 1) Buscar por sku en la lista (evita el 404 del detalle)
-    let resp = await fetch(`/api/productos/?sku=${encodeURIComponent(sku)}`);
-    if (!resp.ok) {
-      // 2) Búsqueda libre
-      resp = await fetch(`/api/productos/?search=${encodeURIComponent(sku)}`);
+    // Nota: si el backend ya decide público/privado por usuario, quita ?public=1.
+    const resp = await fetch(`/api/producto/${encodeURIComponent(sku)}/?public=1`, { cache: 'no-store' });
+    if (!resp.ok) throw new Error(`No se pudo obtener el producto (HTTP ${resp.status})`);
+    const raw = await resp.json();
+
+    // ---- normalización mínima ----
+    const nombre   = raw.nombre || raw.sku || '';
+    const imagen   = raw.imagen || '/static/img/no_image.png';
+    const categoria= raw.categoria_nombre || '';
+    const garantia = raw.garantia ?? null;
+
+    // Precio principal (si tu API pública manda otro campo, ajusta aquí)
+    const precioMin = (typeof raw.precio_minimo === 'number') ? raw.precio_minimo : null;
+    const precioTxt = (precioMin != null) ? `$${precioMin.toFixed(2)} MXN` : 'Precio no disponible';
+
+    // Stock (si staff muestra proveedor; si público, genérico)
+    const showProv  = !!raw.mostrar_proveedor;  // backend decide
+    const mejor     = raw.mejor_oferta || null; // { proveedor, precio, stock } | null
+    const stockCalc = (showProv && mejor) ? (Number(mejor.stock) || 0)
+                                          : (Number(raw.stock_mejor) || Number(raw.inventario) || 0);
+
+    const stockTxt  = (showProv && mejor)
+      ? (stockCalc > 0
+          ? `En existencia: ${stockCalc} (por ${mejor.proveedor})`
+          : `Agotado (por ${mejor.proveedor})`)
+      : (stockCalc > 0 ? `En existencia: ${stockCalc}` : 'Agotado');
+
+    // ---- pintar cabecera ----
+    if (modalImg)    modalImg.src = imagen;
+    setText(modalNombre, nombre);
+
+    // Descripción breve (primera línea/oración de la descripción cruda si existe)
+    const desc = (raw.descripcion || '').trim();
+    const primeraFrase = desc.split(/\.\s+|\n/)[0] || '';
+    setText(modalDesc1, primeraFrase);
+    setText(modalDesc2, categoria ? `Categoría: ${categoria}` : '');
+
+    // Precio / existencia / garantía
+    setText(modalPrecio,     precioTxt);
+    setText(modalExistencia, stockTxt);
+    setText(modalGarantia,   (garantia != null && garantia !== '') ? `${garantia}` : 'Sin garantía');
+
+    // ---- Características detalladas (lista) ----
+    if (modalCaracUl) {
+      const basePairs = [];
+      if (raw.sku)              basePairs.push(['SKU', raw.sku]);
+      if (categoria)            basePairs.push(['Categoría', categoria]);
+      if (garantia != null && garantia !== '') basePairs.push(['Garantía', garantia]);
+
+      // lo que parsea el backend desde "descripcion"
+      const extras = Array.isArray(raw.caracteristicas) ? raw.caracteristicas : [];
+
+      const baseLis  = basePairs.map(([k, v]) => `<li><strong>${k}:</strong> ${v}</li>`).join('');
+      const extraLis = extras.map(txt => `<li>${txt}</li>`).join('');
+
+      modalCaracUl.innerHTML = baseLis + extraLis;
     }
-    // 3) Último intento: endpoint de detalle (si lo tienes en el backend)
-    if (!resp.ok) {
-      resp = await fetch(`/api/producto/${encodeURIComponent(sku)}/`);
-    }
-    if (!resp.ok) throw new Error('Producto no encontrado');
 
-    // ⬇⬇ ESTA ES LA LÍNEA QUE QUIERES ⬇⬇
-    let raw = await resp.json();
-    console.log('[DETALLE RAW]', raw);
-
-    // Si vino del listado, puede ser array
-    if (Array.isArray(raw)) {
-      if (!raw.length) throw new Error('Producto no encontrado');
-      raw = raw.find(p => String(p.sku) === String(sku)) || raw[0];
-    }
-
-    // Normalizamos nombres de campos (ver función más abajo)
-    const producto = normalizarProducto(raw);
-
-    // ---- Relleno del modal (usa tu plantilla si existe) ----
-    const modalImagen = document.querySelector('#modal-imagen');
-    const modalNombre = document.querySelector('#modal-nombre');
-    const modalDescripcionProd = document.querySelector('#modal-descripcion-prod');
-    const modalDescripcion2Prod = document.querySelector('#modal-descripcion2-prod');
-    const modalPrecio = document.querySelector('#modal-precio');
-    const modalExistencia = document.querySelector('#modal-existencia');
-    const modalGarantia = document.querySelector('#modal-garantia');
-    const modalProveedores = document.querySelector('#modal-proveedores');
-    const contCarac = document.getElementById('modal-caracteristicas-adicionales');
-    const listaCarac = document.getElementById('lista-caracteristicas-adicionales');
-    const productoModal = document.getElementById('producto-modal');
-    const closeBtn = document.getElementById('close-producto-modal');
-
-    const usaPlantillaDetallada =
-      modalImagen || modalNombre || modalDescripcionProd || modalPrecio || modalProveedores;
-      function cerrarModalProducto() {
-      if (productoModal) productoModal.style.display = 'none';
-      document.body.classList.remove('modal-open');
-    }
-
-    if (closeBtn) {
-      closeBtn.addEventListener('click', cerrarModalProducto);
-    }
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && productoModal && productoModal.style.display !== 'none') {
-        cerrarModalProducto();
+    // ---- Lista de proveedores (solo si staff/privado) ----
+    if (provBox) {
+      if (showProv && Array.isArray(raw.precios_proveedor) && raw.precios_proveedor.length > 0) {
+        provBox.innerHTML = `
+          <h4>Precios por proveedor:</h4>
+          <ul>
+            ${raw.precios_proveedor.map(p => `
+              <li><strong>${p.proveedor}</strong>: $${(typeof p.precio === 'number' ? p.precio.toFixed(2) : 'N/D')} MXN
+                (Stock: ${p.stock ?? 'N/D'})</li>`).join('')}
+          </ul>`;
+      } else {
+        provBox.innerHTML = '';
       }
-    });  
+    }
 
-    if (contCarac && listaCarac) {
-  const textDetallado = (producto.descripcion_2 || producto.descripcion || '').trim();
-
-  // Si quieres mostrarlo como párrafos en lugar de lista, cambia este bloque.
-  const items = textDetallado
-    .split(/\r?\n|\. (?=[A-ZÁÉÍÓÚÑ0-9])/g) // líneas o oraciones
-    .map(s => s.trim())
-    .filter(Boolean);
-
-  listaCarac.innerHTML = items.length
-    ? items.map(s => `<li>${s}</li>`).join('')
-    : '<li>No hay características adicionales.</li>';
-  }
-
-    if (usaPlantillaDetallada) {
-      if (modalImagen) modalImagen.src = producto.imagen || '/static/img/no_image.png';
-      if (modalNombre) modalNombre.textContent = producto.nombre || 'Sin nombre';
-      if (modalDescripcionProd) modalDescripcionProd.textContent = producto.descripcion || '';
-      if (modalDescripcion2Prod) modalDescripcion2Prod.textContent = producto.descripcion_2 || '';
-      if (modalGarantia) modalGarantia.textContent = producto.garantia || 'Sin garantía';
-      if (modalExistencia) {
-        modalExistencia.textContent = (producto.inventario > 0)
-          ? `En existencia: ${producto.inventario}`
-          : 'Agotado';
-      }
-      if (modalPrecio) {
-        modalPrecio.textContent = (producto.precio_mxn != null)
-          ? `$${Number(producto.precio_mxn).toFixed(2)} MXN`
-          : 'Precio no disponible';
-      }
-      if (modalProveedores) {
-        if (producto.proveedores && producto.proveedores.length > 0) {
-          modalProveedores.innerHTML = `
-            <h4>💰 Precios por proveedor:</h4>
-            <ul>
-              ${producto.proveedores.map(p =>
-                `<li><strong>${p.nombre || p.proveedor}</strong>: $${Number(p.precio).toFixed(2)} MXN (Stock: ${p.stock ?? 'N/D'})</li>`
-              ).join('')}
-            </ul>
-          `;
-        } else {
-          modalProveedores.innerHTML = '<p>Sin precios de proveedores disponibles.</p>';
+    // ---- botón "Agregar al carrito" ----
+    if (btnAgregar) {
+      btnAgregar.disabled = stockCalc <= 0;
+      btnAgregar.onclick = () => {
+        const qty = Math.max(1, parseInt(inputCantidad?.value || '1', 10) || 1);
+        // Ajusta el objeto a tu función real de carrito
+        if (typeof agregarProductoAlCarrito === 'function') {
+          agregarProductoAlCarrito(raw.sku, qty, {
+            nombre: nombre,
+            imagen: imagen,
+            precioUnitario: precioMin ?? 0
+          });
         }
-      }
-      if (productoModal && productoModal.style) {
-        productoModal.style.display = 'flex';
-        document.body.classList.add('modal-open');
-      }
-      return;
+      };
     }
 
-    // ---- Fallback genérico si no tienes plantilla detallada ----
-    if (modalBody) {
-      modalBody.innerHTML = `
-        <button class="auto-close" id="auto-modal-close">Cerrar</button>
-        <h3 style="margin-top:0">${producto.nombre || producto.sku || 'Producto'}</h3>
-        <img src="${producto.imagen || '/static/img/no_image.png'}" alt="${producto.nombre || 'Producto'}" style="max-width:100%;margin:8px 0">
-        <p><strong>SKU:</strong> ${producto.sku ?? ''}</p>
-        <p><strong>Categoría:</strong> ${producto.categoria_nombre ?? ''}</p>
-        <p><strong>Garantía:</strong> ${producto.garantia ?? 'Sin garantía'}</p>
-        <p><strong>Existencia:</strong> ${(producto.inventario > 0) ? `En existencia: ${producto.inventario}` : 'Agotado'}</p>
-        <p><strong>Precio:</strong> ${(producto.precio_mxn != null) ? `$${Number(producto.precio_mxn).toFixed(2)} MXN` : 'No disponible'}</p>
-        <div>${producto.descripcion || ''}</div>
-      `;
-      const btn = document.querySelector('#auto-modal-close');
-      if (btn) btn.addEventListener('click', () => {
-        if (productoModal && productoModal.style) productoModal.style.display = 'none';
-        document.body.classList.remove('modal-open');
-      });
-    }
-    if (productoModal && productoModal.style) {
-      productoModal.style.display = 'flex';
+    // ---- mostrar modal ----
+    if (modal) {
+      modal.style.display = 'flex';
       document.body.classList.add('modal-open');
     }
-
   } catch (err) {
     console.error('Error al obtener detalles del producto:', err);
+    alert('No se pudieron cargar los detalles del producto.');
   }
 }
 
@@ -416,9 +453,31 @@ async function mostrarDetallesProducto(sku) {
   };
 
   // Inicio
-  document.addEventListener('DOMContentLoaded', () => {
-    const loader2 = $('#loader');
-    if (loader2) loader2.style.display = 'none';
-    fetchProductos();
-  });
+document.addEventListener('DOMContentLoaded', () => {
+  // checkbox "Solo en existencia"
+  const soloStockChk = document.querySelector('input[type="checkbox"][name="solo_en_existencia"]') ||
+                       document.querySelector('#solo-existencia'); // usa el id que tengas
+  if (soloStockChk) {
+    soloStockChk.addEventListener('change', () => {
+      state.soloStock = !!soloStockChk.checked;
+      fetchProductos();
+    });
+  }
+
+  // input de búsqueda
+  const searchInput = document.querySelector('input[type="text"][name="busqueda"]') ||
+                      document.querySelector('#search-producto'); // usa tu id
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      state.search = e.target.value.trim();
+      // debounce si quieres; por simplicidad:
+      fetchProductos();
+    });
+  }
+
+  // carga inicial
+  loadCategorias();
+  fetchProductos();
+});
+
 })();

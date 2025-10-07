@@ -3,17 +3,17 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from django.db.models import F, DecimalField, ExpressionWrapper, Case, When
+from django.db.models import Prefetch, Q
 from .models import Producto, Conversation, ChatMessage, ProveedorPrecio, ConfiguracionGlobal
 import pandas as pd
 from django.core.management import call_command
 import os
+import re
 from django.conf import settings
 from django.http import JsonResponse
 from rest_framework import generics
 from .serializers import ProductoSerializer
 from django.views.decorators.http import require_POST, require_GET
-from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.sessions.models import Session
 import json
@@ -22,11 +22,64 @@ from productos.forms import ArrobaCatalogForm, ProceCatalogForm, TechsmartCatalo
 from productos.catalogos.arroba import procesar_catalogo_arroba
 from productos.catalogos.proce import procesar_catalogo_proce
 from productos.catalogos.techsmart import procesar_catalogo_techsmart
+from productos.models import Producto, ProveedorPrecio, Categoria# ajusta el import a tu app
 
 from django.urls import reverse
 from core.utils import get_tasa_dolar
 
+
 tasa = get_tasa_dolar()
+
+def parse_caracteristicas_desde_descripcion(texto: str):
+    """
+    Convierte la descripción libre en una lista de características (bullets).
+    Soporta saltos de línea, '-', '•', '*', y ';' como separadores.
+    """
+    if not texto:
+        return []
+    bruto = texto.replace('\r\n', '\n').replace('\r', '\n')
+    partes = re.split(r'\n|;|•|\*|- |\u2022', bruto)
+
+    res = []
+    for p in partes:
+        item = (p or '').strip()
+        if not item:
+            continue
+        item = re.sub(r'^[\-\u2022•\*\s]+', '', item)  # quita viñetas
+        item = re.sub(r'\s+', ' ', item)               # colapsa espacios
+        if item and item not in res:
+            res.append(item)
+    return res
+
+def _is_public_request(request):
+    return (not request.user.is_authenticated) or (not request.user.is_staff)
+
+def _split_features(text):
+    """Convierte el texto en lista de características."""
+    items = []
+    for raw in (text or "").splitlines():
+        s = raw.strip()
+        if not s:
+            continue
+        if s[0] in ("-", "•", "*"):
+            s = s[1:].strip()
+        items.append(s)
+    return items
+
+
+def _best_offer(producto):
+    ganador = None
+    for pp in producto.proveedorprecio_set.all():
+        if pp.precio is None:
+            continue
+        cand = {
+            "proveedor": pp.proveedor.nombre,
+            "precio": float(pp.precio),
+            "stock": pp.stock or 0,
+        }
+        if ganador is None or cand["precio"] < ganador["precio"]:
+            ganador = cand
+    return ganador
 
 def admin_dashboard(request):
     # Instanciar los formularios vacíos
@@ -387,136 +440,136 @@ def close_conversation_api(request, conversation_id):
 # ==========================================================
 # API: Productos en formato JSON (para el catálogo principal)
 # ==========================================================
+
+@require_GET
+def api_categorias(request):
+    cats = list(Categoria.objects.order_by('nombre').values('id', 'nombre'))
+    return JsonResponse(cats, safe=False)
+
 @require_GET
 def api_productos(request):
-    # Trae categoría en la misma consulta y evita N+1 en precios de proveedor
-    productos = (
+    public = _is_public_request(request) or request.GET.get('public') == '1'
+
+    # ⬇⬇⬇ AQUÍ estaba el error: asegúrate de ASIGNAR el queryset y usar paréntesis
+    qs = (
         Producto.objects
         .select_related('categoria')
-        .prefetch_related('proveedorprecio_set__proveedor')
+        .prefetch_related(
+            Prefetch(
+                'proveedorprecio_set',
+                queryset=ProveedorPrecio.objects.select_related('proveedor')
+            )
+        )
     )
 
-    data = []
-    for p in productos:
-        # Detalle de precios por proveedor
-        precios_proveedor = []
-        for pp in p.proveedorprecio_set.all():
-            precios_proveedor.append({
-                "proveedor": pp.proveedor.nombre,
-                "precio": float(pp.precio) if pp.precio is not None else None,
-                "stock": pp.stock if pp.stock is not None else 0,
-            })
+    # Filtros opcionales
+    cat_id = request.GET.get('categoria')
+    if cat_id:
+        qs = qs.filter(categoria_id=cat_id)
 
-        # Precio mínimo disponible (si alguno tiene precio)
-        precio_min = min(
-            (x["precio"] for x in precios_proveedor if x["precio"] is not None),
-            default=None
-        )
+    if request.GET.get('stock') == '1':
+        qs = qs.filter(
+            Q(proveedorprecio_set__stock__gt=0) | Q(stock__gt=0) | Q(inventario__gt=0)
+        ).distinct()
+
+    q = request.GET.get('q')
+    if q:
+        qs = qs.filter(Q(nombre__icontains=q) | Q(descripcion__icontains=q) | Q(sku__icontains=q))
+
+    data = []
+    for p in qs:
+        precios_proveedor = [{
+            "proveedor": pp.proveedor.nombre,
+            "precio": float(pp.precio) if pp.precio is not None else None,
+            "stock": pp.stock or 0,
+        } for pp in p.proveedorprecio_set.all()]
+
+        mejor = _best_offer(p)
+        precio_minimo = mejor["precio"] if mejor else None
+        stock_mejor   = mejor["stock"]  if mejor else (getattr(p, "stock", 0) or getattr(p, "inventario", 0) or 0)
+
+        if public:
+            mejor_oferta = None
+            precios_publicos = []
+            mostrar_proveedor = False
+        else:
+            mejor_oferta = mejor
+            precios_publicos = precios_proveedor
+            mostrar_proveedor = True
 
         data.append({
             "id": p.id,
             "sku": p.sku,
-            # Prioriza p.nombre; si no hay, usa un snippet de descripción; si no, el SKU
-            "nombre": (p.nombre or ((p.descripcion[:80] + "…") if p.descripcion else p.sku)),
+            "nombre": p.nombre or (p.descripcion[:80] + "…") if p.descripcion else p.sku,
             "descripcion": p.descripcion or "",
             "categoria_nombre": p.categoria.nombre if p.categoria else "",
             "imagen": p.imagen.url if getattr(p, "imagen", None) else "",
-            # usa el campo que tengas: inventario / stock (fallback a 0)
-            "inventario": getattr(p, "inventario", None) or getattr(p, "stock", 0) or 0,
-            "garantia": getattr(p, "garantia", None),
-            "precios_proveedor": precios_proveedor,
-            "precio_minimo": precio_min,
+            "inventario": getattr(p, "stock", None) or getattr(p, "inventario", 0) or 0,
+
+            "precio_minimo": precio_minimo,
+            "stock_mejor": stock_mejor,
+
+            "mejor_oferta": mejor_oferta,
+            "precios_proveedor": precios_publicos,
+            "mostrar_proveedor": mostrar_proveedor,
+            "caracteristicas_items": parse_caracteristicas_desde_descripcion(p.descripcion or ""),
+            "caracteristicas":       parse_caracteristicas_desde_descripcion(p.descripcion or ""),
         })
 
-        return JsonResponse(data, safe=False)
-    productos = Producto.objects.all()
-    data = []
+    return JsonResponse(data, safe=False)
+    # Trae categoría y precarga proveedor->precio para evitar N+1      
+    
+@require_GET
+def api_producto_detalle(request, sku):
+    public = _is_public_request(request) or request.GET.get('public') == '1'
 
-    for p in productos:
-        # Obtener los precios por proveedor
-        precios_proveedor = []
-        precios = ProveedorPrecio.objects.filter(producto=p)
-        for pp in precios:
-            precios_proveedor.append({
-                "proveedor": pp.proveedor.nombre,
-                "precio": float(pp.precio) if pp.precio else None,
-                "stock": pp.stock if pp.stock is not None else 0,
-            })
+    p = get_object_or_404(
+        Producto.objects
+        .select_related('categoria')
+        .prefetch_related(
+            Prefetch('proveedorprecio_set',
+                     queryset=ProveedorPrecio.objects.select_related('proveedor'))
+        ),
+        sku=sku
+    )
 
-        # Calcular el precio mínimo (por si quieres mostrar el más barato)
-        precio_min = min(
-            [pp["precio"] for pp in precios_proveedor if pp["precio"] is not None],
-            default=None
-        )
+    precios_proveedor = [{
+        "proveedor": pp.proveedor.nombre,
+        "precio": float(pp.precio) if pp.precio is not None else None,
+        "stock": pp.stock or 0,
+    } for pp in p.proveedorprecio_set.all()]
 
-        data.append({
-            "id": p.id,
-            "sku": p.sku,
-            "nombre": getattr(p, "descripcion", "Sin nombre"),
-            "descripcion": getattr(p, "descripcion", ""),
-            "categoria_nombre": p.categoria.nombre if hasattr(p, "categoria") and p.categoria else "Sin categoría",
-            "imagen": p.imagen.url if hasattr(p, "imagen") and p.imagen else "",
-            "inventario": getattr(p, "inventario", 0),
-            "garantia": getattr(p, "garantia", None),
-            "precios_proveedor": precios_proveedor,  # 🔥 aquí van los detalles
-            "precio_minimo": precio_min,  # 🔥 precio más barato
-        })
+    mejor = _best_offer(p)
+    precio_minimo = mejor["precio"] if mejor else None
+    stock_mejor   = mejor["stock"]  if mejor else (getattr(p, "stock", 0) or getattr(p, "inventario", 0) or 0)
 
-        return JsonResponse(data, safe=False)
-    productos = Producto.objects.all()
-    data = []
+    if public:
+        mejor_oferta = None
+        precios_publicos = []
+        mostrar_proveedor = False
+    else:
+        mejor_oferta = mejor
+        precios_publicos = precios_proveedor
+        mostrar_proveedor = True
 
-    for p in productos:
-        data.append({
-            'id': p.id,
-            'sku': p.sku,
-            'nombre': getattr(p, 'descripcion', 'Sin nombre'),  # ✅ corregido
-            'descripcion': getattr(p, 'descripcion', ''),
-            'precio_mxn': float(p.precio_mxn) if hasattr(p, 'precio_mxn') else 0,
-            'categoria_nombre': p.categoria.nombre if hasattr(p, 'categoria') and p.categoria else 'Sin categoría',
-            'imagen': p.imagen.url if hasattr(p, 'imagen') and p.imagen else '',
-            'inventario': getattr(p, 'inventario', 0),
-            'garantia_meses': getattr(p, 'garantia', None),
-        })
+    data = {
+        "id": p.id,
+        "sku": p.sku,
+        "nombre": p.nombre or (p.descripcion[:80] + "…") if p.descripcion else p.sku,
+        "descripcion": p.descripcion or "",
+        "categoria_nombre": p.categoria.nombre if p.categoria else "",
+        "imagen": p.imagen.url if getattr(p, "imagen", None) else "",
+        "inventario": getattr(p, "stock", None) or getattr(p, "inventario", 0) or 0,
 
-        return JsonResponse(data, safe=False)
+        "precio_minimo": precio_minimo,
+        "stock_mejor": stock_mejor,
 
-    productos = Producto.objects.all().prefetch_related("proveedorprecio_set")
+        "mejor_oferta": mejor_oferta,
+        "precios_proveedor": precios_publicos,
+        "mostrar_proveedor": mostrar_proveedor,
+        "garantia": getattr(p, "garantia", None),
+        "caracteristicas_items": parse_caracteristicas_desde_descripcion(p.descripcion or ""),
+        "caracteristicas":       parse_caracteristicas_desde_descripcion(p.descripcion or ""),
 
-    data = []
-    for producto in productos:
-        precios = []
-        for precio in producto.proveedorprecio_set.all():
-            precios.append({
-                "proveedor": precio.proveedor.nombre,
-                "precio": round(precio.precio, 2),
-                "stock": precio.stock,
-            })
-
-        data.append({
-            "sku": producto.sku,
-            "descripcion": producto.descripcion,
-            "garantia": producto.garantia,
-            "condicion": producto.condicion,
-            "categoria": producto.categoria.nombre if producto.categoria else "",
-            "precios": precios,
-        })
-
-        return JsonResponse({"productos": data})
-    productos = Producto.objects.select_related('categoria').all()
-
-    data = []
-    for p in productos:
-        data.append({
-            "id": p.id,
-            "sku": p.sku,
-            "nombre": p.nombre,
-            "descripcion": p.descripcion,
-            "categoria_nombre": p.categoria.nombre if p.categoria else "",
-            "precio_mxn": p.precio_dolar,  # o p.precio_mxn si lo tienes
-            "inventario": p.stock,  # o el campo que uses
-            "imagen": p.imagen.url if p.imagen else "",
-            "garantia": p.garantia,
-        })
-
+    }
     return JsonResponse(data, safe=False)

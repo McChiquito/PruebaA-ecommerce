@@ -73,6 +73,10 @@ class Producto(models.Model):
     nombre = models.CharField(max_length=255, blank=True, null=True)  # <— NUEVO
     sku = models.CharField(max_length=100, unique=True)
     descripcion = models.TextField(blank=True, null=True)
+    caracteristicas = models.TextField(
+        blank=True, default="",
+        help_text="Escribe una característica por línea (puedes iniciar con '-', '•' o '*')."
+    )
     precio = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     precio_dolar = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, blank=True)

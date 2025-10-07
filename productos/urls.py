@@ -3,12 +3,16 @@ from django.conf import settings
 from django.conf.urls.static import static
 from . import views
 from .views import ProductoAPIView, upload_catalogs_view, admin_chat_panel, admin_dashboard
-
+from productos.views import api_productos, api_categorias
 app_name = 'productos'
 
 urlpatterns = [
     path('', views.index, name='index'),  # 👉 Página principal con el catálogo incluido
     path('api/productos/', views.api_productos, name='api_productos'),
+    path('api/categorias/', api_categorias, name='api_categorias'),
+    path('api/producto/<slug:sku>/', views.api_producto_detalle, name='api_producto_detalle'),
+
+    
     path('admin-dashboard/upload-catalogs/', upload_catalogs_view, name='upload_catalogs'),
     path('admin-chat-panel/', admin_chat_panel, name='admin_chat_panel'),
     path("admin-dashboard/", admin_dashboard, name="admin_dashboard"),

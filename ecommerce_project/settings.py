@@ -8,7 +8,14 @@ SECRET_KEY = 'django-insecure-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']  # En desarrollo, permitir todos los hosts
+ALLOWED_HOSTS = ['yahirzaele1.pythonanywhere.com','www.vicvarcomputers.com', 'vicvarcomputers.com']  # En desarrollo, permitir todos los hosts
+
+CSRF_TRUSTED_ORIGINS  = [
+    'yahirzaele1.pythonanywhere.com',
+    'www.vicvarcomputers.com',
+    'vicvarcomputers.com'
+]
+  
 
 # Aplicaciones instaladas
 INSTALLED_APPS = [
